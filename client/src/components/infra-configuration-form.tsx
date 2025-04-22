@@ -104,13 +104,7 @@ export default function InfraConfigurationForm({
   });
 
   function handleSubmitForm(values: InfraFormValues) {
-    // Store basic values in the ECS config context
-    updateEcsConfig({
-      applicationName: values.friendlyStackName,
-      environment: values.environment,
-    });
-    
-    // Store detailed infrastructure values in the Infra config context
+    // Store detailed infrastructure values in the Infra config context only
     updateInfraConfig({
       friendlyStackName: values.friendlyStackName,
       environment: values.environment,

@@ -95,36 +95,35 @@ export async function getInfraSteps() {
 /**
  * Start the infrastructure provisioning process
  * @param credentials AWS username and password
- * @param config Basic infrastructure configuration
  * @param infraConfig Detailed infrastructure configuration
  * @returns Provisioning response
  */
 export async function startInfraProvisioning(
   credentials: AwsCredentialsRequest,
-  config: EcsConfig,
   infraConfig?: InfraConfig
 ) {
-  // Merge the basic config with detailed infrastructure config if provided
-  const configToSend = infraConfig 
-    ? {
-        ...config,
-        friendlyStackName: infraConfig.friendlyStackName,
-        environment: infraConfig.environment,
-        ecsTaskRole: infraConfig.ecsTaskRole,
-        provisionCoreVpc: infraConfig.provisionCoreVpc,
-        provisionEcsSpoke: infraConfig.provisionEcsSpoke,
-        provisionEc2Spoke: infraConfig.provisionEc2Spoke,
-        provisionBorderControlSpoke: infraConfig.provisionBorderControlSpoke,
-        bcAdminAdGroup: infraConfig.bcAdminAdGroup,
-        vpcProvisioningArtifactName: infraConfig.vpcProvisioningArtifactName,
-        bcProvisioningArtifactName: infraConfig.bcProvisioningArtifactName,
-        bcAdminAdGroupDomain: infraConfig.bcAdminAdGroupDomain,
-        ec2SpokeProvisioningArtifactName: infraConfig.ec2SpokeProvisioningArtifactName,
-        ecsSpokeProvisioningArtifactName: infraConfig.ecsSpokeProvisioningArtifactName,
-        linuxGroup: infraConfig.linuxGroup,
-        windowsGroup: infraConfig.windowsGroup,
-      }
-    : config;
+  if (!infraConfig) {
+    throw new Error('Infrastructure configuration is required');
+  }
+  
+  // Use the infrastructure config directly
+  const configToSend = {
+    friendlyStackName: infraConfig.friendlyStackName,
+    environment: infraConfig.environment,
+    ecsTaskRole: infraConfig.ecsTaskRole,
+    provisionCoreVpc: infraConfig.provisionCoreVpc,
+    provisionEcsSpoke: infraConfig.provisionEcsSpoke,
+    provisionEc2Spoke: infraConfig.provisionEc2Spoke,
+    provisionBorderControlSpoke: infraConfig.provisionBorderControlSpoke,
+    bcAdminAdGroup: infraConfig.bcAdminAdGroup,
+    vpcProvisioningArtifactName: infraConfig.vpcProvisioningArtifactName,
+    bcProvisioningArtifactName: infraConfig.bcProvisioningArtifactName,
+    bcAdminAdGroupDomain: infraConfig.bcAdminAdGroupDomain,
+    ec2SpokeProvisioningArtifactName: infraConfig.ec2SpokeProvisioningArtifactName,
+    ecsSpokeProvisioningArtifactName: infraConfig.ecsSpokeProvisioningArtifactName,
+    linuxGroup: infraConfig.linuxGroup,
+    windowsGroup: infraConfig.windowsGroup,
+  };
 
   const response = await apiRequest<{ success: boolean, message: string, provisioningId: number }>(
     '/api/infra/start',

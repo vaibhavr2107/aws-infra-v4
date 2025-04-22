@@ -142,7 +142,7 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
     try {
       if (currentPage === 'infra') {
         // Start infra provisioning with detailed config
-        await startInfraProvisioning(awsCredentials, ecsConfig, infraConfig);
+        await startInfraProvisioning(awsCredentials, infraConfig);
         
         // Update local state with infra steps
         setProvisioningState(prev => ({
@@ -151,7 +151,7 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
           status: 'in-progress',
           currentStep: 'setup-auth',
           steps: infraSteps,
-          config: { ...ecsConfig, ...infraConfig },
+          config: infraConfig,
         }));
       } else {
         // Start ECS provisioning
