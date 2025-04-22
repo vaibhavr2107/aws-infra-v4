@@ -44,10 +44,10 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     e.preventDefault();
     
     // Validate infrastructure config
-    if (!infraConfig) {
+    if (!infraConfig || !awsCredentials) {
       toast({
         title: "Validation Error",
-        description: "Infrastructure configuration is missing",
+        description: "Infrastructure configuration and AWS credentials are required",
         variant: "destructive"
       });
       return;
@@ -65,11 +65,16 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     
     // Start provisioning process
     try {
-      await startProvisioningProcess();
+      await startInfraProvisioning(awsCredentials, infraConfig);
       setActiveStep('provisioning');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Provisioning Error",
+        description: error.message || "Failed to start infrastructure provisioning",
+        variant: "destructive"
+      });
+      return;
+    }
         description: "Failed to start the provisioning process. Please try again.",
         variant: "destructive"
       });
