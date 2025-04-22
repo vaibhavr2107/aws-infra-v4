@@ -22,10 +22,10 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     infraConfig,
     startProvisioningProcess
   } = useProvisioning();
-  
+
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState<'credentials' | 'configuration' | 'provisioning'>('credentials');
-  
+
   const handleCredentialsNext = () => {
     // Validate AWS credentials
     if (!awsCredentials.username || !awsCredentials.password) {
@@ -36,13 +36,13 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-    
+
     setActiveStep('configuration');
   };
-  
+
   const handleProvisioningStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate infrastructure config
     if (!infraConfig || !awsCredentials) {
       toast({
@@ -52,7 +52,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-    
+
     const configError = validateInfraConfig(infraConfig);
     if (configError) {
       toast({
@@ -62,10 +62,10 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-    
+
     // Start provisioning process
     try {
-      await startInfraProvisioning(awsCredentials, infraConfig);
+      await startProvisioningProcess(awsCredentials, infraConfig); // Assuming startProvisioningProcess is the correct function name
       setActiveStep('provisioning');
     } catch (error: any) {
       toast({
@@ -75,13 +75,12 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-    }
   };
-  
+
   const handleConfigurationBack = () => {
     setActiveStep('credentials');
   };
-  
+
   return (
     <div className="max-w-7xl mx-auto pb-6">
       <div className="mb-6 flex items-center">
@@ -95,7 +94,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">Infrastructure Provisioning</h1>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Left Side - Forms */}
         <div>
@@ -105,7 +104,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-          
+
           {activeStep === 'configuration' && (
             <InfraConfigurationForm 
               onSubmit={handleProvisioningStart}
@@ -113,7 +112,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-          
+
           {activeStep === 'provisioning' && (
             <Card>
               <CardHeader>
@@ -130,7 +129,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
                   <p className="font-medium">ECS Spoke: <span className="font-normal">{infraConfig?.provisionEcsSpoke ? 'Yes' : 'No'}</span></p>
                   <p className="font-medium">EC2 Spoke: <span className="font-normal">{infraConfig?.provisionEc2Spoke ? 'Yes' : 'No'}</span></p>
                 </div>
-                
+
                 {(provisioningState.status === 'failed' || provisioningState.status === 'completed') && (
                   <Button 
                     onClick={() => setActiveStep('configuration')}
@@ -144,7 +143,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
             </Card>
           )}
         </div>
-        
+
         {/* Right Side - Status and Logs */}
         <div className="space-y-6">
           <StepTracker 
@@ -152,7 +151,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
             currentStep={provisioningState.currentStep}
             status={provisioningState.status}
           />
-          
+
           <ActivityMonitor 
             logs={provisioningState.logs || []}
             status={provisioningState.status || 'pending'}
