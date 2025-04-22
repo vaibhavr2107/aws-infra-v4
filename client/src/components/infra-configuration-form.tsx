@@ -27,6 +27,13 @@ import { ArrowLeft } from "lucide-react";
 const infraFormSchema = z.object({
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters",
+  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
+    message: "Stack name can only contain letters, numbers, and hyphens"
+  }),
+  applicationName: z.string().min(3, {
+    message: "Application name must be at least 3 characters",
+  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
+    message: "Application name can only contain letters, numbers, and hyphens"
   }),
   environment: z.enum(["dev", "test", "prod"], {
     required_error: "Please select an environment",
