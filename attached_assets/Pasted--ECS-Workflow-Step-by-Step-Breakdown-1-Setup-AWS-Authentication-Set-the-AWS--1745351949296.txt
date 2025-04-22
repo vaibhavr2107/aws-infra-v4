@@ -1,0 +1,80 @@
+
+## **ECS Workflow: Step-by-Step Breakdown**
+
+### **1. Setup AWS Authentication**
+- Set the AWS region and inject credentials dynamically.
+- Credentials are fetched from your internal org endpoint (via an API), not stored locally.
+- These will be used to initialize AWS SDK clients like `ServiceCatalogClient` and `STSClient`.
+
+---
+
+### **2. Validate AWS Credentials**
+- Use AWS STS to validate whether the provided credentials are correct.
+- Call: **`GetCallerIdentity`**
+- Purpose: Ensure authentication is working before performing provisioning actions.
+
+---
+
+### **3. Fetch Service Catalog Product Metadata**
+- Identify and retrieve metadata (like ProductId, ProvisioningArtifactId) for required products.
+- Target Service Catalog Products:
+  - `core-vpc`
+  - `ecs-spoke`
+  - `ec2-spoke`
+  - `border-controls-spoke`
+- Call: **`DescribeProduct`**
+- Purpose: Collect necessary information to provision these products later.
+
+---
+
+### **4. Provision IAM Roles**
+- Provision a Service Catalog product specifically for setting up required IAM roles.
+- Product example: `085728974218-test-framework-IamRoles`
+- Required parameters:
+  - Environment
+  - Friendly Stack Name
+  - Flags for roles like `ProvisionEcsTaskControlRole`
+- Call: **`ProvisionProduct`**
+- Purpose: Set up permissions needed for ECS operations.
+
+---
+
+### **5. Wait for IAM Role Provisioning Completion**
+- Continuously poll the provisioning status until it completes or fails.
+- Check for statuses:
+  - `AVAILABLE`
+  - `UNDER_CHANGE`
+  - `ERROR`
+  - `FAILED`
+- Call: **`DescribeProvisionedProduct`**
+- Implement timeout logic (e.g., 15 minutes) with periodic polling.
+- Purpose: Ensure IAM roles are successfully provisioned before continuing.
+
+---
+
+### **6. Provision Infrastructure Components**
+- Provision another Service Catalog product to set up VPC, ECS cluster, EC2 instances, etc.
+- Product example: `085728974218-test-framework-InfraComponents`
+- Provide parameters for all infrastructure components like:
+  - VPC Configuration
+  - ECS Cluster Name
+  - EC2 Instance Types
+  - Border Control Flags
+- Call: **`ProvisionProduct`**
+- Purpose: Create actual infrastructure needed for ECS.
+
+---
+
+### **7. Wait for Infrastructure Provisioning Completion**
+- Similar polling strategy as IAM roles.
+- Call: **`DescribeProvisionedProduct`**
+- Wait for ECS infrastructure stack status to become `AVAILABLE`.
+- Handle timeouts and errors gracefully.
+- Purpose: Ensure infra is completely ready before marking process as completed.
+
+---
+
+### **8. Terminate Provisioned Product (Optional Cleanup)**
+- If any step fails or if user cancels, terminate provisioned products to avoid orphaned resources.
+- Call: **`TerminateProvisionedProduct`**
+- Purpose: Clean up any partial infrastructure to prevent unwanted costs or resource conflicts.

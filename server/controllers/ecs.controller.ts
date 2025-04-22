@@ -183,11 +183,13 @@ function getStepStatus(stepId: string, state: any): 'pending' | 'in-progress' | 
   // Find which step we're on in the sequence
   const stepOrder = [
     'authentication',
-    'vpc',
-    'cluster',
-    'task-definition',
-    'service',
-    'deployment'
+    'validate-credentials',
+    'fetch-catalog',
+    'provision-iam',
+    'wait-iam',
+    'provision-infra',
+    'wait-infra',
+    'finalize'
   ];
   
   const currentStepIndex = stepOrder.indexOf(state.currentStep || '');
