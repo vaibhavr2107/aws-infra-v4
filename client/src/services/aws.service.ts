@@ -1,8 +1,8 @@
 import { apiRequest } from "@/lib/queryClient";
 import { 
-  AwsCredentialsRequest, 
-  ProvisioningConfig 
-} from "@shared/schema";
+  AwsCredentialsRequest,
+  EcsConfig 
+} from "@/lib/types";
 
 /**
  * Service for handling AWS API calls

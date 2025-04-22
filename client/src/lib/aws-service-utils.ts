@@ -1,40 +1,62 @@
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  AwsCredentialsRequest, 
-  AwsCredentials, 
-  EcsConfig, 
-  ProvisioningResponse,
-  ProvisioningState,
-  ProvisioningLog
-} from "@/lib/types";
+import { AwsCredentialsRequest, EcsConfig, ProvisioningLog, ProvisioningState, AwsCredentials, ProvisioningResponse } from './types';
+import { apiRequest } from './queryClient';
 
-// Function to get AWS temporary credentials
-export async function getAwsCredentials(credentials: AwsCredentialsRequest): Promise<AwsCredentials> {
-  const response = await apiRequest('POST', '/api/aws/credentials', credentials);
-  return response.json();
+/**
+ * Get temporary AWS credentials
+ * @param credentials AWS username and password
+ * @returns Temporary AWS credentials
+ */
+export async function getAwsCredentials(credentials: AwsCredentialsRequest) {
+  return await apiRequest<AwsCredentials>('/api/aws/credentials', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  });
 }
 
-// Function to start provisioning
+/**
+ * Start the provisioning process
+ * @param credentials AWS username and password
+ * @param config ECS configuration
+ * @returns Provisioning response
+ */
 export async function startProvisioning(
-  infrastructureType: 'ecs' | 'eks',
   credentials: AwsCredentialsRequest,
   config: EcsConfig
-): Promise<ProvisioningResponse> {
-  const response = await apiRequest('POST', '/api/provision/start', {
-    infrastructureType,
-    credentials,
-    config
+) {
+  return await apiRequest<ProvisioningResponse>('/api/provision/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      credentials,
+      config,
+      type: 'ecs'
+    }),
   });
-  return response.json();
 }
 
-// Function to check provisioning status
+/**
+ * Get the current provisioning status
+ * @returns Current provisioning state
+ */
 export async function getProvisioningStatus(): Promise<ProvisioningState> {
-  const response = await apiRequest('GET', '/api/provision/status');
-  return response.json();
+  return await apiRequest<ProvisioningState>('/api/provision/status', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 }
 
-// Helper function to format logs
+/**
+ * Format a log message with timestamp
+ * @param message Log message
+ * @returns Formatted log object
+ */
 export function formatLog(message: string): ProvisioningLog {
   return {
     timestamp: new Date().toLocaleTimeString(),
@@ -42,82 +64,92 @@ export function formatLog(message: string): ProvisioningLog {
   };
 }
 
-// Function to validate AWS Credentials form
+/**
+ * Validate AWS credentials
+ * @param credentials AWS username and password
+ * @returns Error message or null if valid
+ */
 export function validateAwsCredentials(credentials: AwsCredentialsRequest): string | null {
-  if (!credentials.username || credentials.username.length < 3) {
-    return "AWS username must be at least 3 characters";
+  if (!credentials.username) {
+    return 'Username is required';
   }
   
-  if (!credentials.password || credentials.password.length < 3) {
-    return "Password must be at least 3 characters";
+  if (!credentials.password) {
+    return 'Password is required';
   }
   
   return null;
 }
 
-// Function to validate ECS Config form
+/**
+ * Validate ECS configuration
+ * @param config ECS configuration
+ * @returns Error message or null if valid
+ */
 export function validateEcsConfig(config: EcsConfig): string | null {
-  if (!config.applicationName || config.applicationName.length < 3) {
-    return "Application name must be at least 3 characters";
+  if (!config.applicationName) {
+    return 'Application name is required';
   }
   
   if (!config.environment) {
-    return "Environment must be selected";
+    return 'Environment is required';
   }
   
   if (!config.instanceType) {
-    return "Instance type must be selected";
+    return 'Instance type is required';
   }
   
   if (config.containerCount < 1 || config.containerCount > 10) {
-    return "Container count must be between 1 and 10";
+    return 'Container count must be between 1 and 10';
   }
   
   return null;
 }
 
-// Utility function for steps
+/**
+ * ECS provisioning steps
+ */
 export const ecsSteps = [
   {
-    id: "authentication",
-    title: "AWS Authentication",
-    description: "Verify credentials and obtain temporary session token",
-    icon: "lock",
-    status: "pending"
+    id: 'authentication',
+    title: 'Authentication',
+    description: 'Authenticating with AWS services',
+    icon: 'lock',
+    status: 'pending' as const,
   },
   {
-    id: "vpc",
-    title: "VPC Configuration",
-    description: "Configure networking and security groups",
-    icon: "globe",
-    status: "pending"
+    id: 'vpc',
+    title: 'VPC Setup',
+    description: 'Creating VPC and security groups',
+    icon: 'network',
+    status: 'pending' as const,
   },
   {
-    id: "cluster",
-    title: "ECS Cluster Creation",
-    description: "Provision ECS cluster with specified configuration",
-    icon: "layout-grid",
-    status: "pending"
+    id: 'cluster',
+    title: 'ECS Cluster',
+    description: 'Creating ECS cluster',
+    icon: 'server',
+    status: 'pending' as const,
   },
   {
-    id: "task-definition",
-    title: "Task Definition",
-    description: "Configure container definitions and resource requirements",
-    icon: "file-text",
-    status: "pending"
+    id: 'task-definition',
+    title: 'Task Definition',
+    description: 'Setting up task definition',
+    icon: 'file-text',
+    status: 'pending' as const,
   },
   {
-    id: "service",
-    title: "ECS Service Configuration",
-    description: "Setup load balancing and auto-scaling policies",
-    icon: "settings",
-    status: "pending"
+    id: 'service',
+    title: 'ECS Service',
+    description: 'Creating ECS service',
+    icon: 'cloud',
+    status: 'pending' as const,
   },
   {
-    id: "deployment",
-    title: "Service Deployment",
-    description: "Deploy service and verify health checks",
-    icon: "rocket",
-    status: "pending"
-  }
+    id: 'deployment',
+    title: 'Deployment',
+    description: 'Deploying application containers',
+    icon: 'rocket',
+    status: 'pending' as const,
+  },
 ];

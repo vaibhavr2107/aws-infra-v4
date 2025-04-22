@@ -1,6 +1,11 @@
-// AWS Provisioning Step definitions
+/**
+ * Step status type
+ */
 export type StepStatus = 'pending' | 'in-progress' | 'completed' | 'failed';
 
+/**
+ * Provisioning step
+ */
 export interface ProvisioningStep {
   id: string;
   title: string;
@@ -9,11 +14,17 @@ export interface ProvisioningStep {
   status: StepStatus;
 }
 
+/**
+ * Provisioning log entry
+ */
 export interface ProvisioningLog {
   timestamp: string;
   message: string;
 }
 
+/**
+ * AWS temporary credentials
+ */
 export interface AwsCredentials {
   accessKeyId: string;
   secretAccessKey: string;
@@ -21,6 +32,9 @@ export interface AwsCredentials {
   expiresAt: string;
 }
 
+/**
+ * ECS configuration
+ */
 export interface EcsConfig {
   applicationName: string;
   environment: 'dev' | 'test' | 'staging' | 'prod';
@@ -29,11 +43,17 @@ export interface EcsConfig {
   autoScaling: boolean;
 }
 
+/**
+ * AWS credentials request
+ */
 export interface AwsCredentialsRequest {
   username: string;
   password: string;
 }
 
+/**
+ * Provisioning state
+ */
 export interface ProvisioningState {
   infrastructureType: 'ecs' | 'eks';
   status: 'pending' | 'in-progress' | 'completed' | 'failed';
@@ -44,6 +64,9 @@ export interface ProvisioningState {
   config?: EcsConfig;
 }
 
+/**
+ * Provisioning response from API
+ */
 export interface ProvisioningResponse {
   success: boolean;
   message: string;

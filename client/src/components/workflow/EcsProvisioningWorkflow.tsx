@@ -1,75 +1,33 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AwsCredentialsForm from "./AwsCredentialsForm";
-import EcsConfigForm from "./EcsConfigForm";
-import StepTracker from "@/components/ui/step-tracker";
-import ActivityMonitor from "@/components/ui/activity-monitor";
-import { useToast } from "@/hooks/use-toast";
-import { AwsCredentialsRequest, ProvisioningConfig } from "@shared/schema";
-import { ProvisioningLog, ProvisioningStep } from "@/lib/types";
-import { ecsStepDefinitions } from "./StepDefinitions";
-import { 
-  getAwsCredentials, 
-  startEcsProvisioning, 
-  getEcsProvisioningStatus,
-  validateAwsCredentials, 
-  validateEcsConfig 
-} from "@/services/aws.service";
+import React, { useState } from 'react';
+import { useProvisioning } from '@/context/provisioning-context';
+import { useToast } from '@/hooks/use-toast';
+import AwsCredentialForm from '@/components/aws-credential-form';
+import EcsConfigurationForm from '@/components/ecs-configuration-form';
+import StepTracker from '@/components/ui/step-tracker';
+import ActivityMonitor from '@/components/ui/activity-monitor';
+import { validateAwsCredentials, validateEcsConfig } from '@/lib/aws-service-utils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface EcsProvisioningWorkflowProps {
   onBack: () => void;
 }
 
-/**
- * ECS Provisioning Workflow Component
- * Handles the full workflow for provisioning ECS infrastructure
- */
 const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBack }) => {
+  const { 
+    provisioningState, 
+    awsCredentials,
+    ecsConfig,
+    startProvisioningProcess
+  } = useProvisioning();
+  
   const { toast } = useToast();
+  const [activeStep, setActiveStep] = useState<'credentials' | 'configuration' | 'provisioning'>('credentials');
   
-  // State management for the workflow
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed' | 'failed'>('pending');
-  const [currentStep, setCurrentStep] = useState<string | null>(null);
-  const [logs, setLogs] = useState<ProvisioningLog[]>([]);
-  const [steps, setSteps] = useState<ProvisioningStep[]>(
-    ecsStepDefinitions.map(step => ({
-      ...step,
-      status: 'pending'
-    }))
-  );
-  
-  // Form state
-  const [credentials, setCredentials] = useState<AwsCredentialsRequest>({
-    username: '',
-    password: ''
-  });
-  
-  const [config, setConfig] = useState<ProvisioningConfig>({
-    applicationName: '',
-    environment: 'dev',
-    instanceType: 't2.micro',
-    containerCount: 1,
-    autoScaling: false
-  });
-  
-  // Update credentials
-  const handleCredentialsChange = (newCredentials: Partial<AwsCredentialsRequest>) => {
-    setCredentials(prev => ({ ...prev, ...newCredentials }));
-  };
-  
-  // Update config
-  const handleConfigChange = (newConfig: Partial<ProvisioningConfig>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }));
-  };
-  
-  // Start provisioning process
-  const startProvisioning = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate credentials
-    const credentialsError = validateAwsCredentials(credentials);
+  const handleCredentialsNext = () => {
+    // Validate AWS credentials
+    const credentialsError = validateAwsCredentials(awsCredentials);
     if (credentialsError) {
       toast({
         title: "Validation Error",
@@ -79,8 +37,14 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
       return;
     }
     
-    // Validate config
-    const configError = validateEcsConfig(config);
+    setActiveStep('configuration');
+  };
+  
+  const handleProvisioningStart = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate ECS config
+    const configError = validateEcsConfig(ecsConfig);
     if (configError) {
       toast({
         title: "Validation Error",
@@ -90,146 +54,98 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
       return;
     }
     
-    setIsLoading(true);
-    
+    // Start provisioning process
     try {
-      // First, authenticate with AWS to get credentials
-      await getAwsCredentials(credentials);
-      
-      // Start the provisioning process
-      await startEcsProvisioning(credentials, config);
-      
-      // Update status
-      setStatus('in-progress');
-      setCurrentStep('authentication');
-      
-      // Set initial log
-      setLogs([{
-        timestamp: new Date().toLocaleTimeString(),
-        message: "Starting provisioning process..."
-      }]);
-      
-      // Start polling for status updates
-      const intervalId = setInterval(async () => {
-        try {
-          const response = await getEcsProvisioningStatus();
-          
-          if (response) {
-            setStatus(response.status);
-            setCurrentStep(response.currentStep);
-            setLogs(response.logs || []);
-            
-            // Update steps status
-            if (response.steps) {
-              setSteps(response.steps);
-            }
-            
-            // If provisioning is complete or failed, stop polling
-            if (response.status === 'completed' || response.status === 'failed') {
-              clearInterval(intervalId);
-              setIsLoading(false);
-            }
-          }
-        } catch (error) {
-          console.error("Error polling provisioning status:", error);
-        }
-      }, 2000);
-      
-      // Clear interval on component unmount
-      return () => clearInterval(intervalId);
-      
+      await startProvisioningProcess();
+      setActiveStep('provisioning');
     } catch (error) {
-      console.error("Error starting provisioning:", error);
       toast({
         title: "Provisioning Error",
-        description: "Failed to start provisioning process. Please try again.",
+        description: "Failed to start the provisioning process. Please try again.",
         variant: "destructive"
       });
-      setIsLoading(false);
     }
   };
   
-  // Determine if form should be disabled
-  const isFormDisabled = isLoading || status === 'in-progress' || status === 'completed';
+  const handleConfigurationBack = () => {
+    setActiveStep('credentials');
+  };
   
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto pb-6">
       <div className="mb-6 flex items-center">
         <button
           onClick={onBack}
           className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
-          disabled={isLoading || status === 'in-progress'}
         >
-          <i className="ri-arrow-left-line mr-1"></i>
-          <span>Back</span>
+          <ArrowLeft className="h-5 w-5 mr-1" />
+          <span>Back to Services</span>
         </button>
         <h1 className="text-2xl font-bold text-gray-900">ECS Infrastructure Provisioning</h1>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Configuration Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form id="provisioning-form" onSubmit={startProvisioning}>
-              {/* AWS Credentials Section */}
-              <AwsCredentialsForm 
-                credentials={credentials}
-                onCredentialsChange={handleCredentialsChange}
-                disabled={isFormDisabled}
-              />
-              
-              {/* Application Details Section */}
-              <EcsConfigForm 
-                config={config}
-                onConfigChange={handleConfigChange}
-                disabled={isFormDisabled}
-              />
-              
-              <Button
-                type="submit"
-                disabled={isFormDisabled}
-                className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                  status === 'completed'
-                    ? 'bg-success hover:bg-success/90'
-                    : 'bg-aws-blue hover:bg-blue-700'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-blue`}
-              >
-                {isLoading || status === 'in-progress' ? (
-                  <>
-                    <i className="ri-loader-4-line animate-spin mr-2"></i>
-                    Provisioning...
-                  </>
-                ) : status === 'completed' ? (
-                  <>
-                    <i className="ri-check-line mr-2"></i>
-                    Provisioning Complete
-                  </>
-                ) : (
-                  <>
-                    <i className="ri-rocket-line mr-2"></i>
-                    Start Provisioning
-                  </>
+        {/* Left Side - Forms */}
+        <div>
+          {activeStep === 'credentials' && (
+            <AwsCredentialForm
+              onNext={handleCredentialsNext}
+              disabled={provisioningState.status === 'in-progress'}
+            />
+          )}
+          
+          {activeStep === 'configuration' && (
+            <EcsConfigurationForm 
+              onSubmit={handleProvisioningStart}
+              onBack={handleConfigurationBack}
+              disabled={provisioningState.status === 'in-progress'}
+            />
+          )}
+          
+          {activeStep === 'provisioning' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Provisioning in Progress</CardTitle>
+                <CardDescription>
+                  Your ECS infrastructure is being created. You can monitor the progress below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm mb-4">
+                  <p className="font-medium">Application: <span className="font-normal">{ecsConfig.applicationName}</span></p>
+                  <p className="font-medium">Environment: <span className="font-normal capitalize">{ecsConfig.environment}</span></p>
+                  <p className="font-medium">Instance Type: <span className="font-normal">{ecsConfig.instanceType}</span></p>
+                  <p className="font-medium">Containers: <span className="font-normal">{ecsConfig.containerCount}</span></p>
+                  <p className="font-medium">Auto Scaling: <span className="font-normal">{ecsConfig.autoScaling ? 'Enabled' : 'Disabled'}</span></p>
+                </div>
+                
+                {(provisioningState.status === 'failed' || provisioningState.status === 'completed') && (
+                  <Button 
+                    onClick={() => setActiveStep('configuration')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {provisioningState.status === 'failed' ? 'Retry Configuration' : 'New Deployment'}
+                  </Button>
                 )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </div>
         
-        {/* Steps Tracker */}
-        <StepTracker 
-          steps={steps} 
-          currentStep={currentStep}
-        />
+        {/* Right Side - Status and Logs */}
+        <div className="space-y-6">
+          <StepTracker 
+            steps={provisioningState.steps} 
+            currentStep={provisioningState.currentStep}
+          />
+          
+          <ActivityMonitor 
+            logs={provisioningState.logs}
+            status={provisioningState.status}
+          />
+        </div>
       </div>
-      
-      {/* Activity Monitor */}
-      <ActivityMonitor 
-        logs={logs}
-        status={status}
-      />
     </div>
   );
 };
