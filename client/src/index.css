@@ -1,3 +1,6 @@
+/* Import Kumbh Sans font */
+@import url('https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght,YOPQ@100..900,40..300&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

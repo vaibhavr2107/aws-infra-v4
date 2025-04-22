@@ -1,3 +1,4 @@
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -29,15 +30,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ProvisioningProvider>
-          <div className="min-h-screen bg-gray-50 text-gray-800">
+        <div className="min-h-screen bg-gray-50 text-gray-800">
+          <ProvisioningProvider>
             <Navbar />
             <div className="flex-grow">
               <Router />
             </div>
-          </div>
-          <Toaster />
-        </ProvisioningProvider>
+          </ProvisioningProvider>
+        </div>
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

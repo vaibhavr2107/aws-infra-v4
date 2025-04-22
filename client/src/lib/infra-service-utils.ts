@@ -84,11 +84,11 @@ export const infraSteps: Step[] = [
  */
 export async function getInfraSteps() {
   const response = await apiRequest<{ success: boolean, steps: Step[] }>('/api/infra/steps');
-  
+
   if (!response.success) {
     throw new Error('Failed to fetch infrastructure steps');
   }
-  
+
   return response.steps;
 }
 
@@ -105,45 +105,23 @@ export async function startInfraProvisioning(
   if (!infraConfig) {
     throw new Error('Infrastructure configuration is required');
   }
-  
-  // Use the infrastructure config directly
-  const configToSend = {
-    friendlyStackName: infraConfig.friendlyStackName,
-    environment: infraConfig.environment,
-    ecsTaskRole: infraConfig.ecsTaskRole,
-    provisionCoreVpc: infraConfig.provisionCoreVpc,
-    provisionEcsSpoke: infraConfig.provisionEcsSpoke,
-    provisionEc2Spoke: infraConfig.provisionEc2Spoke,
-    provisionBorderControlSpoke: infraConfig.provisionBorderControlSpoke,
-    bcAdminAdGroup: infraConfig.bcAdminAdGroup,
-    vpcProvisioningArtifactName: infraConfig.vpcProvisioningArtifactName,
-    bcProvisioningArtifactName: infraConfig.bcProvisioningArtifactName,
-    bcAdminAdGroupDomain: infraConfig.bcAdminAdGroupDomain,
-    ec2SpokeProvisioningArtifactName: infraConfig.ec2SpokeProvisioningArtifactName,
-    ecsSpokeProvisioningArtifactName: infraConfig.ecsSpokeProvisioningArtifactName,
-    linuxGroup: infraConfig.linuxGroup,
-    windowsGroup: infraConfig.windowsGroup,
-  };
 
-  const response = await apiRequest<{ success: boolean, message: string, provisioningId: number }>(
-    '/api/infra/start',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        credentials,
-        config: configToSend,
-        infrastructureType: 'infra',
-      }),
-    }
-  );
-  
+  const response = await apiRequest<{ success: boolean, message: string }>('/api/infra/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      credentials,
+      config: infraConfig,
+      infrastructureType: 'infra'
+    }),
+  });
+
   if (!response.success) {
     throw new Error(response.message || 'Failed to start infrastructure provisioning');
   }
-  
+
   return response;
 }
 
@@ -153,7 +131,7 @@ export async function startInfraProvisioning(
  */
 export async function getInfraProvisioningStatus(): Promise<ProvisioningState> {
   const response = await apiRequest<ProvisioningState>('/api/infra/status');
-  
+
   if (!response) {
     return {
       infrastructureType: 'infra',
@@ -163,7 +141,7 @@ export async function getInfraProvisioningStatus(): Promise<ProvisioningState> {
       logs: [],
     };
   }
-  
+
   return response;
 }
 
@@ -176,12 +154,12 @@ export function validateInfraConfig(config: InfraConfig): string | null {
   if (!config.friendlyStackName || config.friendlyStackName.length < 3) {
     return 'Stack name must be at least 3 characters';
   }
-  
+
   if (!config.environment) {
     return 'Environment is required';
   }
-  
+
   // Add any other validations specific to infrastructure
-  
+
   return null;
 }
