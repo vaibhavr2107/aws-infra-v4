@@ -6,11 +6,16 @@ import EcsConfigForm from "./EcsConfigForm";
 import StepTracker from "@/components/ui/step-tracker";
 import ActivityMonitor from "@/components/ui/activity-monitor";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { AwsCredentialsRequest, ProvisioningConfig } from "@shared/schema";
 import { ProvisioningLog, ProvisioningStep } from "@/lib/types";
 import { ecsStepDefinitions } from "./StepDefinitions";
-import { validateAwsCredentials, validateEcsConfig } from "@/lib/aws-service-utils";
+import { 
+  getAwsCredentials, 
+  startEcsProvisioning, 
+  getEcsProvisioningStatus,
+  validateAwsCredentials, 
+  validateEcsConfig 
+} from "@/services/aws.service";
 
 interface EcsProvisioningWorkflowProps {
   onBack: () => void;
@@ -89,19 +94,10 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
     
     try {
       // First, authenticate with AWS to get credentials
-      await apiRequest('/api/aws/credentials', {
-        method: 'POST',
-        body: JSON.stringify(credentials)
-      });
+      await getAwsCredentials(credentials);
       
       // Start the provisioning process
-      await apiRequest('/api/ecs/provision', {
-        method: 'POST',
-        body: JSON.stringify({
-          credentials,
-          config
-        })
-      });
+      await startEcsProvisioning(credentials, config);
       
       // Update status
       setStatus('in-progress');
@@ -116,9 +112,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
       // Start polling for status updates
       const intervalId = setInterval(async () => {
         try {
-          const response = await apiRequest('/api/ecs/status', {
-            method: 'GET'
-          });
+          const response = await getEcsProvisioningStatus();
           
           if (response) {
             setStatus(response.status);
