@@ -29,15 +29,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ProvisioningProvider>
-          <div className="min-h-screen bg-gray-50 text-gray-800">
-            <Navbar />
-            <div className="flex-grow">
+        <div className="min-h-screen bg-gray-50 text-gray-800">
+          <Navbar />
+          <div className="flex-grow">
+            <ProvisioningProvider>
               <Router />
-            </div>
+            </ProvisioningProvider>
           </div>
-          <Toaster />
-        </ProvisioningProvider>
+        </div>
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

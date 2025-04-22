@@ -5,6 +5,8 @@ import Landing from '@/pages/landing';
 import EcsDashboard from '@/pages/ecs-dashboard';
 import InfraDashboard from '@/pages/infra-dashboard';
 
+import Navbar from './navbar';
+
 const AppRouter: React.FC = () => {
   const [location] = useLocation();
 
@@ -16,9 +18,7 @@ const AppRouter: React.FC = () => {
       {location === '/' && <Landing />}
     </div>
   );
-
-  // Default to landing
-  return <Landing />;
+};
 };
 
 export default AppRouter;
