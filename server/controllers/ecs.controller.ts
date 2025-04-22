@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { awsCredentialsRequestSchema, provisioningConfigSchema } from '@shared/schema';
+import { 
+  awsCredentialsRequestSchema, 
+  ecsConfigSchema,
+  provisioningConfigSchema 
+} from '@shared/schema';
 import { storage } from '../storage';
 import { ZodError } from 'zod';
 import { createEcsProvisioningSteps, getEcsStepDefinitions } from '../services/awsEcsSteps.service';
@@ -23,7 +27,7 @@ export async function startEcsProvisioning(req: Request, res: Response) {
     
     // Parse and validate with Zod schemas
     const validatedCredentials = awsCredentialsRequestSchema.parse(credentials);
-    const validatedConfig = provisioningConfigSchema.parse(config);
+    const validatedConfig = ecsConfigSchema.parse(config);
     
     // Get AWS temporary credentials
     const awsCredentials = await getTemporaryCredentials(

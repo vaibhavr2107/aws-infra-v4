@@ -70,7 +70,36 @@ export const awsCredentialsRequestSchema = z.object({
   password: z.string().min(3),
 });
 
-export const provisioningConfigSchema = z.object({
+// ECS Configuration Schema
+export const ecsConfigSchema = z.object({
+  applicationName: z.string().min(3, {
+    message: "Application name must be at least 3 characters"
+  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
+    message: "Application name can only contain letters, numbers, and hyphens"
+  }),
+  environment: z.enum(["dev", "test", "staging", "prod"]),
+  instanceType: z.string().min(1, {
+    message: "Instance type is required"
+  }),
+  containerCount: z.number().int().min(1).max(10),
+  autoScaling: z.boolean(),
+});
+
+// Infrastructure Configuration Schema
+export const infraConfigSchema = z.object({
+  // Common fields that match the provisioning state table
+  applicationName: z.string().min(3, {
+    message: "Application name must be at least 3 characters"
+  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
+    message: "Application name can only contain letters, numbers, and hyphens"
+  }),
+  instanceType: z.string().min(1, {
+    message: "Instance type is required"
+  }).default('t2.micro'),
+  containerCount: z.number().int().min(1).max(10).default(2),
+  autoScaling: z.boolean().default(false),
+  
+  // Infrastructure specific fields
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters"
   }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
@@ -108,6 +137,9 @@ export const provisioningConfigSchema = z.object({
   })
 });
 
+// Legacy schema for backward compatibility
+export const provisioningConfigSchema = z.union([ecsConfigSchema, infraConfigSchema]);
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -116,4 +148,6 @@ export type InsertAwsCredentials = z.infer<typeof insertAwsCredentialsSchema>;
 export type ProvisioningState = typeof provisioningState.$inferSelect;
 export type InsertProvisioningState = z.infer<typeof insertProvisioningStateSchema>;
 export type AwsCredentialsRequest = z.infer<typeof awsCredentialsRequestSchema>;
+export type EcsConfig = z.infer<typeof ecsConfigSchema>;
+export type InfraConfig = z.infer<typeof infraConfigSchema>;
 export type ProvisioningConfig = z.infer<typeof provisioningConfigSchema>;

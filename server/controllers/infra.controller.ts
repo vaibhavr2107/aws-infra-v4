@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { 
   awsCredentialsRequestSchema, 
-  provisioningConfigSchema 
+  infraConfigSchema,
+  provisioningConfigSchema
 } from '@shared/schema';
 import { storage } from '../storage';
 import { getTemporaryCredentials } from '../services/credentials.service';
@@ -26,7 +27,7 @@ export async function startInfraProvisioning(req: Request, res: Response) {
     
     // Parse and validate with Zod schemas
     const validatedCredentials = awsCredentialsRequestSchema.parse(credentials);
-    const validatedConfig = provisioningConfigSchema.parse(config);
+    const validatedConfig = infraConfigSchema.parse(config);
     
     // Get AWS temporary credentials
     const awsCredentials = await getTemporaryCredentials(
@@ -67,11 +68,11 @@ export async function startInfraProvisioning(req: Request, res: Response) {
       infrastructureType: 'infra',
       status: 'pending',
       currentStep: null,
-      applicationName: validatedConfig.applicationName,
+      applicationName: validatedConfig.friendlyStackName, // Use friendlyStackName as applicationName for infra
       environment: validatedConfig.environment,
-      instanceType: validatedConfig.instanceType,
-      containerCount: validatedConfig.containerCount,
-      autoScaling: validatedConfig.autoScaling,
+      instanceType: 't2.micro', // Default for infra
+      containerCount: 2, // Default for infra
+      autoScaling: false, // Default for infra
       logs: initialLogs,
       createdAt: now,
       updatedAt: now
