@@ -111,10 +111,11 @@ export default function InfraConfigurationForm({
     defaultValues,
   });
 
-  function handleSubmitForm(values: InfraFormValues) {
+  async function handleSubmitForm(values: InfraFormValues) {
     console.log('Form submitted with values:', values);
-    // Store detailed infrastructure values in the Infra config context only
-    updateInfraConfig({
+    try {
+      // Store detailed infrastructure values in the Infra config context only
+      await updateInfraConfig({
       friendlyStackName: values.friendlyStackName,
       environment: values.environment,
       ecsTaskRole: values.ecsTaskRole,
