@@ -180,12 +180,24 @@ export async function getInfraProvisioningStatus(req: Request, res: Response) {
  */
 export function getInfraSteps(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Returning mocked infrastructure steps');
+    }
+    
     const steps = getInfraStepDefinitions();
     
-    return res.status(200).json({
+    const response = {
       success: true,
-      steps
-    });
+      steps,
+      dummyMode // Include dummy mode flag in response
+    };
+    
+    return res.status(200).json(dummyMode
+      ? generateMockResponse(response) // Wrap in mock response format if in dummy mode
+      : response
+    );
     
   } catch (error) {
     console.error('Error getting infrastructure steps:', error);

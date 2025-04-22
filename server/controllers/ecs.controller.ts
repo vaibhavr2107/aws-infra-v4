@@ -115,6 +115,12 @@ export async function startEcsProvisioning(req: Request, res: Response) {
  */
 export async function getEcsProvisioningStatus(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Returning mocked ECS provisioning status');
+    }
+    
     // Get the latest provisioning state
     const latestState = await storage.getLatestProvisioningState();
     
@@ -146,15 +152,21 @@ export async function getEcsProvisioningStatus(req: Request, res: Response) {
       autoScaling: latestState.autoScaling
     };
     
-    return res.status(200).json({
+    const response = {
       success: true,
       status: latestState.status,
       currentStep: latestState.currentStep,
       infrastructureType: latestState.infrastructureType,
       steps,
       logs,
-      config
-    });
+      config,
+      dummyMode // Include dummy mode flag in response
+    };
+    
+    return res.status(200).json(dummyMode
+      ? generateMockResponse(response) // Wrap in mock response format if in dummy mode
+      : response
+    );
     
   } catch (error) {
     console.error('Error getting ECS provisioning status:', error);
@@ -170,12 +182,24 @@ export async function getEcsProvisioningStatus(req: Request, res: Response) {
  */
 export function getEcsSteps(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Returning mocked ECS steps');
+    }
+    
     const steps = getEcsStepDefinitions();
     
-    return res.status(200).json({
+    const response = {
       success: true,
-      steps
-    });
+      steps,
+      dummyMode // Include dummy mode flag in response
+    };
+    
+    return res.status(200).json(dummyMode
+      ? generateMockResponse(response) // Wrap in mock response format if in dummy mode
+      : response
+    );
   } catch (error) {
     console.error('Error getting ECS steps:', error);
     return res.status(500).json({
