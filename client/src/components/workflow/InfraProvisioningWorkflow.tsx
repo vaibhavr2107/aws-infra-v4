@@ -44,7 +44,16 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     e.preventDefault();
     
     // Validate infrastructure config
-    const configError = validateInfraConfig(ecsConfig);
+    if (!infraConfig) {
+      toast({
+        title: "Validation Error",
+        description: "Infrastructure configuration is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const configError = validateInfraConfig(infraConfig);
     if (configError) {
       toast({
         title: "Validation Error",

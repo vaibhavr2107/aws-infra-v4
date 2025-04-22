@@ -79,10 +79,11 @@ export default function InfraConfigurationForm({
 
   // Internal pipeline variables defaults
   const defaultValues: Partial<InfraFormValues> = {
-    friendlyStackName: ecsConfig.applicationName || "my-infrastructure",
-    environment: (ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
-      ? ecsConfig.environment 
-      : "dev",
+    friendlyStackName: infraConfig?.friendlyStackName || "aws-infrastructure",
+    environment: infraConfig?.environment || 
+      ((ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
+        ? ecsConfig.environment 
+        : "dev"),
     ecsTaskRole: true,
     provisionCoreVpc: true,
     provisionEcsSpoke: true,
