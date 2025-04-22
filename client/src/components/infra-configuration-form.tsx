@@ -116,7 +116,7 @@ export default function InfraConfigurationForm({
     try {
       // Store detailed infrastructure values in the Infra config context only
       await updateInfraConfig({
-      friendlyStackName: values.friendlyStackName,
+        friendlyStackName: values.friendlyStackName,
       environment: values.environment,
       ecsTaskRole: values.ecsTaskRole,
       provisionCoreVpc: values.provisionCoreVpc,
@@ -133,9 +133,12 @@ export default function InfraConfigurationForm({
       windowsGroup: values.windowsGroup,
     });
 
-    // Submit the form and pass the form event
-    if (onSubmit) {
-      onSubmit(new Event("submit") as unknown as React.FormEvent);
+      // Submit the form and pass the form event
+      if (onSubmit) {
+        onSubmit(new Event("submit") as unknown as React.FormEvent);
+      }
+    } catch (error) {
+      console.error('Error updating infra config:', error);
     }
   }
 
