@@ -172,22 +172,16 @@ export async function getInfraProvisioningStatus(): Promise<ProvisioningState> {
  * @param config Infrastructure configuration
  * @returns Error message or null if valid
  */
-export function validateInfraConfig(config: EcsConfig): string | null {
-  if (!config.applicationName || config.applicationName.length < 3) {
-    return 'Application name must be at least 3 characters';
+export function validateInfraConfig(config: InfraConfig): string | null {
+  if (!config.friendlyStackName || config.friendlyStackName.length < 3) {
+    return 'Stack name must be at least 3 characters';
   }
   
   if (!config.environment) {
     return 'Environment is required';
   }
   
-  if (!config.instanceType) {
-    return 'Instance type is required';
-  }
-  
-  if (config.containerCount < 1 || config.containerCount > 10) {
-    return 'Container count must be between 1 and 10';
-  }
+  // Add any other validations specific to infrastructure
   
   return null;
 }

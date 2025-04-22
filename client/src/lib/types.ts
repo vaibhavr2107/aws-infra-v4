@@ -61,7 +61,7 @@ export interface ProvisioningState {
   steps: ProvisioningStep[];
   logs: ProvisioningLog[];
   credentials?: AwsCredentials;
-  config?: EcsConfig;
+  config?: any; // This allows it to hold either EcsConfig or InfraConfig
 }
 
 /**
