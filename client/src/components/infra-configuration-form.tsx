@@ -112,6 +112,7 @@ export default function InfraConfigurationForm({
   });
 
   function handleSubmitForm(values: InfraFormValues) {
+    console.log('Form submitted with values:', values);
     // Store detailed infrastructure values in the Infra config context only
     updateInfraConfig({
       friendlyStackName: values.friendlyStackName,

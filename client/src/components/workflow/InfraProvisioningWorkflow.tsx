@@ -42,6 +42,9 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
 
   const handleProvisioningStart = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleProvisioningStart triggered');
+    console.log('Current AWS credentials:', awsCredentials);
+    console.log('Current infra config:', infraConfig);
 
     // Validate infrastructure config
     if (!infraConfig || !awsCredentials) {
