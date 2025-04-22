@@ -1,5 +1,8 @@
-import React from "react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { SiAmazonecs, SiKubernetes } from "react-icons/si";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from '@/lib/utils';
 
 interface InfrastructureCardProps {
   type: 'ecs' | 'eks';
@@ -16,58 +19,48 @@ const InfrastructureCard: React.FC<InfrastructureCardProps> = ({
   isAvailable = true,
   onClick
 }) => {
-  // Styles based on type
-  const getTypeStyles = () => {
-    if (type === 'ecs') {
-      return {
-        iconBg: 'bg-aws-light-blue',
-        icon: 'ri-inbox-archive-line text-3xl text-aws-blue',
-        footerBg: 'bg-aws-light-blue',
-        footerText: 'text-aws-blue',
-        footerIcon: 'ri-arrow-right-line text-aws-blue',
-        actionText: 'Select ECS'
-      };
-    } else {
-      return {
-        iconBg: 'bg-aws-light-orange',
-        icon: 'ri-settings-5-line text-3xl text-aws-orange',
-        footerBg: 'bg-aws-light-orange',
-        footerText: 'text-aws-orange',
-        footerIcon: 'ri-lock-line text-aws-orange',
-        actionText: 'Coming Soon'
-      };
-    }
-  };
-  
-  const styles = getTypeStyles();
+  // Determine icon based on type
+  const IconComponent = type === 'ecs' ? SiAmazonecs : SiKubernetes;
   
   return (
-    <div 
-      className={cn(
-        "bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow overflow-hidden",
-        isAvailable ? "hover:shadow-md cursor-pointer" : "opacity-75 cursor-not-allowed"
-      )}
-      onClick={isAvailable ? onClick : undefined}
-      data-infra-type={type}
-    >
-      <div className="p-6 flex items-start">
-        <div className={cn("p-3 rounded-lg", styles.iconBg)}>
-          <i className={styles.icon}></i>
+    <Card className={cn(
+      "flex flex-col",
+      isAvailable ? "bg-white" : "bg-gray-100 opacity-60"
+    )}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-center h-14 mb-2">
+          <IconComponent size={48} className={cn(
+            type === 'ecs' ? "text-aws-blue" : "text-blue-600"
+          )} />
         </div>
-        <div className="ml-5">
-          <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-          <p className="mt-2 text-gray-600">{description}</p>
-        </div>
-      </div>
-      <div className={cn("px-6 py-4 border-t border-gray-100", styles.footerBg)}>
-        <div className="flex justify-between items-center">
-          <span className={cn("text-sm font-medium", styles.footerText)}>
-            {isAvailable ? styles.actionText : 'Coming Soon'}
-          </span>
-          <i className={styles.footerIcon}></i>
-        </div>
-      </div>
-    </div>
+        <CardTitle className="text-xl font-semibold text-center">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <p className="text-sm text-gray-600 text-center">
+          {description}
+        </p>
+      </CardContent>
+      <CardFooter className="flex justify-center pt-4">
+        <Button
+          onClick={onClick}
+          variant={isAvailable ? "default" : "secondary"}
+          disabled={!isAvailable}
+          className={cn(
+            "w-full",
+            type === 'ecs' ? "bg-aws-blue hover:bg-aws-blue/90" : ""
+          )}
+        >
+          {isAvailable ? "Start Provisioning" : "Coming Soon"}
+        </Button>
+        {!isAvailable && (
+          <div className="absolute top-4 right-4 bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-md">
+            Coming Soon
+          </div>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 

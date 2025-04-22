@@ -57,3 +57,28 @@
   }
 }
 
+/* AWS Colors */
+.text-aws-blue {
+  color: #232F3E;
+}
+
+.bg-aws-blue {
+  background-color: #232F3E;
+}
+
+.hover\:bg-aws-blue\/90:hover {
+  background-color: rgba(35, 47, 62, 0.9);
+}
+
+.text-aws-orange {
+  color: #FF9900;
+}
+
+.bg-aws-orange {
+  background-color: #FF9900;
+}
+
+.hover\:bg-aws-orange\/90:hover {
+  background-color: rgba(255, 153, 0, 0.9);
+}
+

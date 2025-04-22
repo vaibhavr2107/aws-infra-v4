@@ -1,6 +1,13 @@
 import React from 'react';
 import { ProvisioningStep } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  CheckCircle2, 
+  Circle, 
+  AlertCircle, 
+  Clock,
+  LoaderCircle
+} from 'lucide-react';
 
 interface StepTrackerProps {
   steps: ProvisioningStep[];
@@ -9,88 +16,75 @@ interface StepTrackerProps {
 
 const StepTracker: React.FC<StepTrackerProps> = ({ steps, currentStep }) => {
   return (
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-      <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Provisioning Progress</h3>
-        <div className="space-y-4">
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl">Provisioning Steps</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-4">
           {steps.map((step, index) => {
-            const isActive = step.id === currentStep;
-            const isCompleted = step.status === 'completed';
-            const isFailed = step.status === 'failed';
-            const isPending = step.status === 'pending';
+            // Determine the status icon based on the step's status
+            let Icon;
+            let iconColor;
+            let stepColor;
+            let lineColor;
+            
+            switch (step.status) {
+              case 'completed':
+                Icon = CheckCircle2;
+                iconColor = 'text-green-500';
+                stepColor = 'text-green-700';
+                lineColor = 'bg-green-500';
+                break;
+              case 'in-progress':
+                Icon = LoaderCircle;
+                iconColor = 'text-blue-500 animate-spin';
+                stepColor = 'text-blue-700';
+                lineColor = 'bg-blue-500';
+                break;
+              case 'failed':
+                Icon = AlertCircle;
+                iconColor = 'text-red-500';
+                stepColor = 'text-red-700';
+                lineColor = 'bg-red-500';
+                break;
+              case 'pending':
+              default:
+                Icon = Circle;
+                iconColor = 'text-gray-300';
+                stepColor = 'text-gray-500';
+                lineColor = 'bg-gray-200';
+                break;
+            }
             
             return (
-              <div key={step.id} className="relative">
-                {/* Timeline connector */}
+              <li key={step.id} className="relative flex items-start">
+                <div className={`flex-shrink-0 h-6 w-6 rounded-full ${iconColor}`}>
+                  <Icon className="h-6 w-6" />
+                </div>
+                
+                {/* Line connecting to the next step */}
                 {index < steps.length - 1 && (
                   <div 
-                    className={cn(
-                      "absolute left-4 top-8 w-0.5 h-full -ml-px z-0",
-                      isCompleted ? "bg-green-500" : "bg-gray-200"
-                    )}
+                    className={`absolute top-6 left-3 w-0.5 h-full -ml-px ${lineColor}`}
+                    style={{ height: 'calc(100% - 1.5rem)' }}
                   />
                 )}
                 
-                {/* Step content with icon */}
-                <div className="relative z-10 flex items-start">
-                  {/* Status indicator */}
-                  <div 
-                    className={cn(
-                      "flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full mr-3",
-                      isCompleted ? "bg-green-500 text-white" : 
-                      isActive ? "bg-blue-500 text-white" :
-                      isFailed ? "bg-red-500 text-white" :
-                      "bg-gray-200 text-gray-500"
-                    )}
-                  >
-                    {isCompleted ? (
-                      <i className="ri-check-line text-lg"></i>
-                    ) : isFailed ? (
-                      <i className="ri-close-line text-lg"></i>
-                    ) : isActive ? (
-                      <i className="ri-loader-4-line animate-spin text-lg"></i>
-                    ) : (
-                      <i className={`ri-${step.icon}-line text-lg`}></i>
-                    )}
-                  </div>
-                  
-                  {/* Step details */}
-                  <div className={cn(
-                    "flex-grow pb-5",
-                    isActive ? "opacity-100" : "opacity-80"
-                  )}>
-                    <h4 className={cn(
-                      "font-medium",
-                      isActive ? "text-blue-700" :
-                      isCompleted ? "text-green-700" :
-                      isFailed ? "text-red-700" :
-                      "text-gray-700"
-                    )}>
-                      {step.title}
-                    </h4>
-                    <p className="text-sm text-gray-500 mt-1">{step.description}</p>
-                    
-                    {/* Status badge */}
-                    <span className={cn(
-                      "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2",
-                      isCompleted ? "bg-green-100 text-green-800" :
-                      isActive ? "bg-blue-100 text-blue-800" :
-                      isFailed ? "bg-red-100 text-red-800" :
-                      "bg-gray-100 text-gray-800"
-                    )}>
-                      {isCompleted ? "Completed" :
-                        isActive ? "In Progress" :
-                        isFailed ? "Failed" :
-                        "Pending"}
-                    </span>
-                  </div>
+                <div className="ml-4 mt-0.5 min-w-0 flex-1">
+                  <h3 className={`text-sm font-medium ${stepColor}`}>
+                    {step.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {step.description}
+                  </p>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
-      </div>
-    </div>
+        </ul>
+      </CardContent>
+    </Card>
   );
 };
 
