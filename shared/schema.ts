@@ -71,11 +71,7 @@ export const awsCredentialsRequestSchema = z.object({
 });
 
 export const provisioningConfigSchema = z.object({
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters"
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
-  }),
+  applicationName: z.string().min(3),
   environment: z.enum(["dev", "test", "staging", "prod"]),
   instanceType: z.string(),
   containerCount: z.number().min(1).max(10),

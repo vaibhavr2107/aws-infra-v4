@@ -22,10 +22,10 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     infraConfig,
     startProvisioningProcess
   } = useProvisioning();
-
+  
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState<'credentials' | 'configuration' | 'provisioning'>('credentials');
-
+  
   const handleCredentialsNext = () => {
     // Validate AWS credentials
     if (!awsCredentials.username || !awsCredentials.password) {
@@ -36,31 +36,15 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-
+    
     setActiveStep('configuration');
   };
-
+  
   const handleProvisioningStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleProvisioningStart triggered');
-    if (!awsCredentials || !infraConfig) {
-      console.error('Missing credentials or config');
-      return;
-    }
-    console.log('Current AWS credentials:', awsCredentials);
-    console.log('Current infra config:', infraConfig);
-
+    
     // Validate infrastructure config
-    if (!infraConfig || !awsCredentials) {
-      toast({
-        title: "Validation Error",
-        description: "Infrastructure configuration and AWS credentials are required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const configError = validateInfraConfig(infraConfig);
+    const configError = validateInfraConfig(ecsConfig);
     if (configError) {
       toast({
         title: "Validation Error",
@@ -69,28 +53,24 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-
+    
     // Start provisioning process
     try {
-      console.log('Starting infrastructure provisioning with config:', infraConfig);
-      await startProvisioningProcess(awsCredentials, infraConfig);
-      console.log('Infrastructure provisioning started successfully');
+      await startProvisioningProcess();
       setActiveStep('provisioning');
-    } catch (error: any) {
-      console.error('Infrastructure provisioning error:', error);
+    } catch (error) {
       toast({
         title: "Provisioning Error",
-        description: error.message || "Failed to start infrastructure provisioning",
+        description: "Failed to start the provisioning process. Please try again.",
         variant: "destructive"
       });
-      return;
     }
   };
-
+  
   const handleConfigurationBack = () => {
     setActiveStep('credentials');
   };
-
+  
   return (
     <div className="max-w-7xl mx-auto pb-6">
       <div className="mb-6 flex items-center">
@@ -104,7 +84,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">Infrastructure Provisioning</h1>
       </div>
-
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Left Side - Forms */}
         <div>
@@ -114,7 +94,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-
+          
           {activeStep === 'configuration' && (
             <InfraConfigurationForm 
               onSubmit={handleProvisioningStart}
@@ -122,7 +102,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-
+          
           {activeStep === 'provisioning' && (
             <Card>
               <CardHeader>
@@ -139,7 +119,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
                   <p className="font-medium">ECS Spoke: <span className="font-normal">{infraConfig?.provisionEcsSpoke ? 'Yes' : 'No'}</span></p>
                   <p className="font-medium">EC2 Spoke: <span className="font-normal">{infraConfig?.provisionEc2Spoke ? 'Yes' : 'No'}</span></p>
                 </div>
-
+                
                 {(provisioningState.status === 'failed' || provisioningState.status === 'completed') && (
                   <Button 
                     onClick={() => setActiveStep('configuration')}
@@ -153,7 +133,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
             </Card>
           )}
         </div>
-
+        
         {/* Right Side - Status and Logs */}
         <div className="space-y-6">
           <StepTracker 
@@ -161,7 +141,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
             currentStep={provisioningState.currentStep}
             status={provisioningState.status}
           />
-
+          
           <ActivityMonitor 
             logs={provisioningState.logs || []}
             status={provisioningState.status || 'pending'}

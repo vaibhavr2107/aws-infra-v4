@@ -27,13 +27,6 @@ import { ArrowLeft } from "lucide-react";
 const infraFormSchema = z.object({
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters",
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Stack name can only contain letters, numbers, and hyphens"
-  }),
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters",
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
   }),
   environment: z.enum(["dev", "test", "prod"], {
     required_error: "Please select an environment",
@@ -86,11 +79,10 @@ export default function InfraConfigurationForm({
 
   // Internal pipeline variables defaults
   const defaultValues: Partial<InfraFormValues> = {
-    friendlyStackName: infraConfig?.friendlyStackName || "aws-infrastructure",
-    environment: infraConfig?.environment || 
-      ((ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
-        ? ecsConfig.environment 
-        : "dev"),
+    friendlyStackName: ecsConfig.applicationName || "my-infrastructure",
+    environment: (ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
+      ? ecsConfig.environment 
+      : "dev",
     ecsTaskRole: true,
     provisionCoreVpc: true,
     provisionEcsSpoke: true,
@@ -111,12 +103,10 @@ export default function InfraConfigurationForm({
     defaultValues,
   });
 
-  async function handleSubmitForm(values: InfraFormValues) {
-    console.log('Form submitted with values:', values);
-    try {
-      // Store detailed infrastructure values in the Infra config context only
-      await updateInfraConfig({
-        friendlyStackName: values.friendlyStackName,
+  function handleSubmitForm(values: InfraFormValues) {
+    // Store detailed infrastructure values in the Infra config context only
+    updateInfraConfig({
+      friendlyStackName: values.friendlyStackName,
       environment: values.environment,
       ecsTaskRole: values.ecsTaskRole,
       provisionCoreVpc: values.provisionCoreVpc,
@@ -133,13 +123,8 @@ export default function InfraConfigurationForm({
       windowsGroup: values.windowsGroup,
     });
 
-      // Submit the form and pass the form event
-      if (onSubmit) {
-        onSubmit(new Event("submit") as unknown as React.FormEvent);
-      }
-    } catch (error) {
-      console.error('Error updating infra config:', error);
-    }
+    // Submit the form
+    onSubmit(new Event("submit") as unknown as React.FormEvent);
   }
 
   return (
