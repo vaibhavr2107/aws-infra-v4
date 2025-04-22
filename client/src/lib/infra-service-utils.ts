@@ -105,25 +105,24 @@ export async function startInfraProvisioning(
   if (!infraConfig) {
     throw new Error('Infrastructure configuration is required');
   }
-  
-  // Use the infrastructure config directly
-  const configToSend = {
-    friendlyStackName: infraConfig.friendlyStackName,
-    environment: infraConfig.environment,
-    ecsTaskRole: infraConfig.ecsTaskRole,
-    provisionCoreVpc: infraConfig.provisionCoreVpc,
-    provisionEcsSpoke: infraConfig.provisionEcsSpoke,
-    provisionEc2Spoke: infraConfig.provisionEc2Spoke,
-    provisionBorderControlSpoke: infraConfig.provisionBorderControlSpoke,
-    bcAdminAdGroup: infraConfig.bcAdminAdGroup,
-    vpcProvisioningArtifactName: infraConfig.vpcProvisioningArtifactName,
-    bcProvisioningArtifactName: infraConfig.bcProvisioningArtifactName,
-    bcAdminAdGroupDomain: infraConfig.bcAdminAdGroupDomain,
-    ec2SpokeProvisioningArtifactName: infraConfig.ec2SpokeProvisioningArtifactName,
-    ecsSpokeProvisioningArtifactName: infraConfig.ecsSpokeProvisioningArtifactName,
-    linuxGroup: infraConfig.linuxGroup,
-    windowsGroup: infraConfig.windowsGroup,
-  };
+
+  const response = await apiRequest<{ success: boolean, message: string }>('/api/infra/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      credentials,
+      config: infraConfig,
+      infrastructureType: 'infra'
+    }),
+  });
+
+  if (!response.success) {
+    throw new Error(response.message || 'Failed to start infrastructure provisioning');
+  }
+
+  return response;
 
   const response = await apiRequest<{ success: boolean, message: string, provisioningId: number }>(
     '/api/infra/start',
