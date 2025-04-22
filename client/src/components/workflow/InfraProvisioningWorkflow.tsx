@@ -74,13 +74,14 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
   return (
     <div className="max-w-7xl mx-auto pb-6">
       <div className="mb-6 flex items-center">
-        <button
+        <Button
           onClick={onBack}
-          className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
+          variant="ghost"
+          className="flex items-center mr-4 gap-1 p-0 h-auto hover:bg-transparent"
         >
-          <ArrowLeft className="h-5 w-5 mr-1" />
+          <ArrowLeft className="h-5 w-5" />
           <span>Back to Services</span>
-        </button>
+        </Button>
         <h1 className="text-2xl font-bold text-gray-900">Infrastructure Provisioning</h1>
       </div>
       
