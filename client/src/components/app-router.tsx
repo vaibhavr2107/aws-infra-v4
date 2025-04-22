@@ -1,11 +1,10 @@
+
 import React from 'react';
 import { useLocation } from 'wouter';
-import { useProvisioning } from '@/context/provisioning-context';
 import Landing from '@/pages/landing';
 import EcsDashboard from '@/pages/ecs-dashboard';
 import InfraDashboard from '@/pages/infra-dashboard';
-
-import Navbar from './navbar';
+import Navbar from '@/components/navbar';
 
 const AppRouter: React.FC = () => {
   const [location] = useLocation();
@@ -18,7 +17,6 @@ const AppRouter: React.FC = () => {
       {location === '/' && <Landing />}
     </div>
   );
-};
 };
 
 export default AppRouter;
