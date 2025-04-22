@@ -66,7 +66,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
     // Start provisioning process
     try {
       console.log('Starting infrastructure provisioning with config:', infraConfig);
-      await startProvisioningProcess();
+      await startProvisioningProcess(awsCredentials, infraConfig);
       console.log('Infrastructure provisioning started successfully');
       setActiveStep('provisioning');
     } catch (error: any) {
