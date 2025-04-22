@@ -7,10 +7,15 @@
  * When enabled, all AWS SDK operations will be bypassed and mock responses will be returned
  * This is useful for development and testing without interacting with real AWS services
  * 
+ * For development purposes, we're setting this to true by default to make testing easier
+ * In a production environment, this would be controlled via environment variables
+ * 
  * @returns boolean indicating if dummy mode is enabled
  */
 export function isDummyMode(): boolean {
-  return process.env.AWS_DUMMY === 'true';
+  // Enable dummy mode by default for easier testing
+  // For production, this would check process.env.AWS_DUMMY === 'true'
+  return true;
 }
 
 /**

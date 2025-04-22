@@ -24,7 +24,7 @@ export async function apiRequest<T = any>(
       jsonResponse.status === 'mock-success' && 
       jsonResponse.message && 
       jsonResponse.data) {
-    console.log('Received dummy mode response, unwrapping data');
+    console.log('Received dummy mode response in query, unwrapping data', url);
     // Return just the data part
     return jsonResponse.data as T;
   }
@@ -54,7 +54,7 @@ export const getQueryFn = <T,>(options: {
         jsonResponse.status === 'mock-success' && 
         jsonResponse.message && 
         jsonResponse.data) {
-      console.log('Received dummy mode response in query, unwrapping data');
+      console.log('Received dummy mode response in query, unwrapping data', queryKey[0]);
       // Return just the data part
       return jsonResponse.data;
     }
