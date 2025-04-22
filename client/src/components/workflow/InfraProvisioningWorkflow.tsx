@@ -75,9 +75,6 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-        description: "Failed to start the provisioning process. Please try again.",
-        variant: "destructive"
-      });
     }
   };
   
