@@ -1,19 +1,15 @@
-import { Router } from "express";
-import { 
-  startEcsProvisioning,
-  getEcsProvisioningStatus,
-  getEcsSteps
-} from "../controllers/ecs.controller";
+import { Router } from 'express';
+import * as ecsController from '../controllers/ecs.controller';
 
 const router = Router();
 
-// Start ECS provisioning
-router.post("/provision", startEcsProvisioning);
+// Start ECS provisioning process
+router.post('/provision', ecsController.startEcsProvisioning);
 
-// Get ECS provisioning status
-router.get("/status", getEcsProvisioningStatus);
+// Get status of ECS provisioning
+router.get('/status', ecsController.getEcsProvisioningStatus);
 
 // Get ECS steps
-router.get("/steps", getEcsSteps);
+router.get('/steps', ecsController.getEcsSteps);
 
 export default router;

@@ -1,4 +1,4 @@
-import { IStorage } from "../storage";
+import { IStorage } from '../storage';
 
 /**
  * Step interface for defining provisioning steps
@@ -31,96 +31,98 @@ export async function executeStepsSequentially(
   steps: ProvisioningStep[],
   provisioningId: number,
   storage: IStorage
-): Promise<StepResult[]> {
-  const results: StepResult[] = [];
-  
+): Promise<void> {
   try {
-    // Process each step sequentially
+    // Update state to in-progress
+    await storage.updateProvisioningState(provisioningId, {
+      status: 'in-progress'
+    });
+    
+    // Add log entry for starting the process
+    await storage.addProvisioningLog(
+      provisioningId,
+      `Starting provisioning process with ${steps.length} steps...`
+    );
+    
+    // Execute each step in sequence
     for (const step of steps) {
-      // Update current step
+      // Update the current step
       await storage.updateProvisioningState(provisioningId, {
-        currentStep: step.id,
-        updatedAt: new Date().toISOString()
+        currentStep: step.id
       });
       
-      // Add log for starting step
+      // Add log entry for starting the step
       await storage.addProvisioningLog(
-        provisioningId, 
-        `Starting: ${step.name}...`
+        provisioningId,
+        `Starting step: ${step.name} - ${step.description}`
       );
       
       try {
         // Execute the step
         await step.execute();
         
-        // If successful, add to results and log
+        // Create success result
         const result: StepResult = {
           stepId: step.id,
           success: true,
-          message: `Completed: ${step.name}`,
+          message: `Successfully completed step: ${step.name}`,
           timestamp: new Date().toISOString()
         };
         
-        results.push(result);
-        
-        // Add completed log
+        // Add log entry for successful step
         await storage.addProvisioningLog(
-          provisioningId, 
-          result.message
+          provisioningId,
+          `✅ ${result.message}`
         );
+        
       } catch (error) {
-        // If failed, add to results and log
+        // Create failed result
         const result: StepResult = {
           stepId: step.id,
           success: false,
-          message: `Failed: ${step.name} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+          message: `Failed to complete step: ${step.name} - ${error instanceof Error ? error.message : String(error)}`,
           timestamp: new Date().toISOString()
         };
         
-        results.push(result);
-        
-        // Add error log
+        // Add log entry for failed step
         await storage.addProvisioningLog(
-          provisioningId, 
-          result.message
+          provisioningId,
+          `❌ ${result.message}`
         );
         
-        // Mark provisioning as failed
+        // Update state to failed
         await storage.updateProvisioningState(provisioningId, {
-          status: "failed",
-          updatedAt: new Date().toISOString()
+          status: 'failed'
         });
         
-        // Stop execution on first failure
-        return results;
+        // Stop execution
+        throw error;
       }
     }
     
-    // Mark provisioning as completed
+    // All steps completed successfully, update state to completed
     await storage.updateProvisioningState(provisioningId, {
-      status: "completed",
-      updatedAt: new Date().toISOString()
+      status: 'completed'
     });
     
-    // Add final log
+    // Add log entry for successful completion
     await storage.addProvisioningLog(
-      provisioningId, 
-      "Provisioning completed successfully!"
+      provisioningId,
+      'Provisioning process completed successfully! 🎉'
     );
     
-    return results;
   } catch (error) {
-    // Handle any unexpected errors
+    console.error('Error executing steps sequentially:', error);
+    
+    // Ensure the provisioning state is marked as failed
     await storage.updateProvisioningState(provisioningId, {
-      status: "failed",
-      updatedAt: new Date().toISOString()
+      status: 'failed'
     });
     
+    // Add log entry for overall failure
     await storage.addProvisioningLog(
-      provisioningId, 
-      `Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`
+      provisioningId,
+      `❌ Provisioning process failed: ${error instanceof Error ? error.message : String(error)}`
     );
-    
-    throw error;
   }
 }

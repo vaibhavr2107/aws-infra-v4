@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { getAwsCredentials } from "../controllers/credentials.controller";
+import { Router } from 'express';
+import * as credentialsController from '../controllers/credentials.controller';
 
 const router = Router();
 
-// GET AWS credentials
-router.post("/credentials", getAwsCredentials);
+// Get temporary AWS credentials
+router.post('/credentials', credentialsController.getAwsCredentials);
 
 export default router;

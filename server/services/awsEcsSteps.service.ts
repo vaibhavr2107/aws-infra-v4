@@ -1,5 +1,5 @@
-import { ProvisioningConfig, AwsCredentials } from "@shared/schema";
-import { ProvisioningStep } from "../utils/syncStepExecutor";
+import { AwsCredentials, ProvisioningConfig } from '@shared/schema';
+import { ProvisioningStep } from '../utils/syncStepExecutor';
 
 /**
  * Creates a list of ECS provisioning steps
@@ -13,225 +13,81 @@ export function createEcsProvisioningSteps(
   credentials: AwsCredentials,
   config: ProvisioningConfig
 ): ProvisioningStep[] {
-  // Define the steps for ECS provisioning
   return [
     {
-      id: "authentication",
-      name: "AWS Authentication",
-      description: "Verify credentials and obtain temporary session token",
+      id: 'authentication',
+      name: 'AWS Authentication',
+      description: 'Verify credentials and obtain temporary session token',
       execute: async () => {
-        // Simulate authentication step
+        // In a real implementation, this would verify the credentials with AWS STS
+        console.log('Authenticating with AWS...');
         await simulateStepExecution(2000);
-        
-        // In a real implementation with AWS SDK v3:
-        // const sts = new STSClient({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // await sts.send(new GetCallerIdentityCommand({}));
+        console.log('Successfully authenticated with AWS');
       }
     },
     {
-      id: "vpc",
-      name: "VPC Configuration",
-      description: "Configure networking and security groups",
+      id: 'vpc',
+      name: 'VPC Configuration',
+      description: 'Configure networking and security groups',
       execute: async () => {
-        // Simulate VPC configuration
-        await simulateStepExecution(3000);
-        
-        // In a real implementation with AWS SDK v3:
-        // const ec2 = new EC2Client({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // const vpcParams = {
-        //   CidrBlock: '10.0.0.0/16',
-        //   TagSpecifications: [
-        //     {
-        //       ResourceType: 'vpc',
-        //       Tags: [
-        //         {
-        //           Key: 'Name',
-        //           Value: `${config.applicationName}-vpc`
-        //         },
-        //         {
-        //           Key: 'Environment',
-        //           Value: config.environment
-        //         }
-        //       ]
-        //     }
-        //   ]
-        // };
-        // 
-        // await ec2.send(new CreateVpcCommand(vpcParams));
-      }
-    },
-    {
-      id: "cluster",
-      name: "ECS Cluster Creation",
-      description: "Provision ECS cluster with specified configuration",
-      execute: async () => {
-        // Simulate cluster creation
-        await simulateStepExecution(4000);
-        
-        // In a real implementation with AWS SDK v3:
-        // const ecs = new ECSClient({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // const clusterParams = {
-        //   clusterName: `${config.applicationName}-cluster`,
-        //   capacityProviders: ['FARGATE', 'FARGATE_SPOT'],
-        //   defaultCapacityProviderStrategy: [
-        //     {
-        //       capacityProvider: 'FARGATE',
-        //       weight: 1,
-        //       base: 1
-        //     }
-        //   ],
-        //   tags: [
-        //     {
-        //       key: 'Environment',
-        //       value: config.environment
-        //     }
-        //   ]
-        // };
-        // 
-        // await ecs.send(new CreateClusterCommand(clusterParams));
-      }
-    },
-    {
-      id: "task-definition",
-      name: "Task Definition",
-      description: "Configure container definitions and resource requirements",
-      execute: async () => {
-        // Simulate task definition creation
-        await simulateStepExecution(2500);
-        
-        // In a real implementation with AWS SDK v3:
-        // const ecs = new ECSClient({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // const taskDefParams = {
-        //   family: `${config.applicationName}-task`,
-        //   networkMode: 'awsvpc',
-        //   requiresCompatibilities: ['FARGATE'],
-        //   cpu: '256',
-        //   memory: '512',
-        //   executionRoleArn: 'arn:aws:iam::account:role/ecsTaskExecutionRole',
-        //   containerDefinitions: [
-        //     {
-        //       name: config.applicationName,
-        //       image: 'nginx:latest', // Example image
-        //       essential: true,
-        //       portMappings: [
-        //         {
-        //           containerPort: 80,
-        //           hostPort: 80,
-        //           protocol: 'tcp'
-        //         }
-        //       ]
-        //     }
-        //   ]
-        // };
-        // 
-        // await ecs.send(new RegisterTaskDefinitionCommand(taskDefParams));
-      }
-    },
-    {
-      id: "service",
-      name: "ECS Service Configuration",
-      description: "Setup load balancing and auto-scaling policies",
-      execute: async () => {
-        // Simulate service configuration
-        await simulateStepExecution(3500);
-        
-        // In a real implementation with AWS SDK v3:
-        // const ecs = new ECSClient({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // const serviceParams = {
-        //   cluster: `${config.applicationName}-cluster`,
-        //   serviceName: `${config.applicationName}-service`,
-        //   taskDefinition: `${config.applicationName}-task`,
-        //   desiredCount: config.containerCount,
-        //   launchType: 'FARGATE',
-        //   networkConfiguration: {
-        //     awsvpcConfiguration: {
-        //       subnets: ['subnet-12345', 'subnet-67890'], // Example subnets
-        //       securityGroups: ['sg-12345'], // Example security group
-        //       assignPublicIp: 'ENABLED'
-        //     }
-        //   }
-        // };
-        // 
-        // await ecs.send(new CreateServiceCommand(serviceParams));
-      }
-    },
-    {
-      id: "deployment",
-      name: "Service Deployment",
-      description: "Deploy service and verify health checks",
-      execute: async () => {
-        // Simulate deployment
+        // In a real implementation, this would create a VPC with subnets and security groups
+        console.log('Creating VPC infrastructure...');
         await simulateStepExecution(5000);
+        console.log(`Created VPC for ${config.applicationName} in ${config.environment} environment`);
+      }
+    },
+    {
+      id: 'cluster',
+      name: 'ECS Cluster Creation',
+      description: 'Provision ECS cluster with specified configuration',
+      execute: async () => {
+        // In a real implementation, this would create an ECS cluster
+        console.log('Creating ECS Cluster...');
+        await simulateStepExecution(4000);
+        console.log(`Created ECS cluster ${config.applicationName}-cluster with ${config.instanceType} instances`);
+      }
+    },
+    {
+      id: 'task-definition',
+      name: 'Task Definition',
+      description: 'Configure container definitions and resource requirements',
+      execute: async () => {
+        // In a real implementation, this would create a task definition
+        console.log('Creating Task Definition...');
+        await simulateStepExecution(3000);
+        console.log(`Created task definition with resource limits for ${config.instanceType}`);
+      }
+    },
+    {
+      id: 'service',
+      name: 'ECS Service Configuration',
+      description: 'Setup load balancing and auto-scaling policies',
+      execute: async () => {
+        // In a real implementation, this would create an ECS service
+        console.log('Configuring ECS Service...');
+        await simulateStepExecution(5000);
+        console.log(`Created ECS service with ${config.containerCount} containers`);
         
-        // In a real implementation with AWS SDK v3:
-        // This would potentially wait for the service to be stable
-        // const ecs = new ECSClient({ 
-        //   region: 'us-east-1',
-        //   credentials: {
-        //     accessKeyId: credentials.accessKeyId,
-        //     secretAccessKey: credentials.secretAccessKey,
-        //     sessionToken: credentials.sessionToken
-        //   }
-        // });
-        // 
-        // const describeParams = {
-        //   cluster: `${config.applicationName}-cluster`,
-        //   services: [`${config.applicationName}-service`]
-        // };
-        // 
-        // // Wait for service to be stable
-        // let stable = false;
-        // while (!stable) {
-        //   const response = await ecs.send(new DescribeServicesCommand(describeParams));
-        //   const service = response.services[0];
-        //   
-        //   if (service.deployments.length === 1 && 
-        //       service.runningCount === service.desiredCount) {
-        //     stable = true;
-        //   } else {
-        //     await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-        //   }
-        // }
+        if (config.autoScaling) {
+          console.log('Configuring auto-scaling policies...');
+          await simulateStepExecution(2000);
+          console.log('Auto-scaling policies configured');
+        }
+      }
+    },
+    {
+      id: 'deployment',
+      name: 'Service Deployment',
+      description: 'Deploy service and verify health checks',
+      execute: async () => {
+        // In a real implementation, this would deploy the service and verify it's healthy
+        console.log('Deploying service...');
+        await simulateStepExecution(6000);
+        console.log('Service deployment completed');
+        
+        console.log('Running health checks...');
+        await simulateStepExecution(3000);
+        console.log('Health checks passed. Deployment successful!');
       }
     }
   ];
@@ -247,37 +103,37 @@ export function getEcsStepDefinitions() {
       id: "authentication",
       title: "AWS Authentication",
       description: "Verify credentials and obtain temporary session token",
-      icon: "lock"
+      icon: "lock",
     },
     {
       id: "vpc",
       title: "VPC Configuration",
       description: "Configure networking and security groups",
-      icon: "globe"
+      icon: "globe",
     },
     {
       id: "cluster",
       title: "ECS Cluster Creation",
       description: "Provision ECS cluster with specified configuration",
-      icon: "layout-grid"
+      icon: "layout-grid",
     },
     {
       id: "task-definition",
       title: "Task Definition",
       description: "Configure container definitions and resource requirements",
-      icon: "file-text"
+      icon: "file-text",
     },
     {
       id: "service",
       title: "ECS Service Configuration",
       description: "Setup load balancing and auto-scaling policies",
-      icon: "settings"
+      icon: "settings",
     },
     {
       id: "deployment",
       title: "Service Deployment",
       description: "Deploy service and verify health checks",
-      icon: "rocket"
+      icon: "rocket",
     }
   ];
 }

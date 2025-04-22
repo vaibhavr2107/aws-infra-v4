@@ -1,100 +1,94 @@
-import { Request, Response } from "express";
-import { storage } from "../storage";
-import { 
-  awsCredentialsRequestSchema, 
-  provisioningConfigSchema 
-} from "@shared/schema";
-import { createEcsProvisioningSteps, getEcsStepDefinitions } from "../services/awsEcsSteps.service";
-import { executeStepsSequentially } from "../utils/syncStepExecutor";
+import { Request, Response } from 'express';
+import { awsCredentialsRequestSchema, provisioningConfigSchema } from '@shared/schema';
+import { storage } from '../storage';
+import { ZodError } from 'zod';
+import { createEcsProvisioningSteps, getEcsStepDefinitions } from '../services/awsEcsSteps.service';
+import { executeStepsSequentially } from '../utils/syncStepExecutor';
+import { getTemporaryCredentials } from '../services/credentials.service';
 
 /**
  * Start the ECS provisioning process
  */
 export async function startEcsProvisioning(req: Request, res: Response) {
   try {
-    // Extract and validate credentials
-    const credentialsValidation = awsCredentialsRequestSchema.safeParse(req.body.credentials);
+    // Validate request body
+    const { credentials, config } = req.body;
     
-    if (!credentialsValidation.success) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid credentials data",
-        errors: credentialsValidation.error.format()
+    // Parse and validate with Zod schemas
+    const validatedCredentials = awsCredentialsRequestSchema.parse(credentials);
+    const validatedConfig = provisioningConfigSchema.parse(config);
+    
+    // Get AWS temporary credentials
+    const awsCredentials = await getTemporaryCredentials(
+      validatedCredentials.username,
+      validatedCredentials.password
+    );
+    
+    if (!awsCredentials) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid AWS credentials'
       });
     }
     
-    // Extract and validate config
-    const configValidation = provisioningConfigSchema.safeParse(req.body.config);
+    // Store AWS credentials
+    const storedCredentials = await storage.storeAwsCredentials({
+      userId: 1, // For demo purposes, we're using a fixed user ID
+      accessKeyId: awsCredentials.accessKeyId,
+      secretAccessKey: awsCredentials.secretAccessKey,
+      sessionToken: awsCredentials.sessionToken,
+      expiresAt: awsCredentials.expiresAt
+    });
     
-    if (!configValidation.success) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid configuration data",
-        errors: configValidation.error.format()
-      });
-    }
-    
-    const { username } = credentialsValidation.data;
-    const config = configValidation.data;
-    
-    // Get user and stored credentials
-    const user = await storage.getUserByUsername(username);
-    
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
-      });
-    }
-    
-    const credentials = await storage.getAwsCredentialsByUserId(user.id);
-    
-    if (!credentials) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "No valid AWS credentials found. Please authenticate first." 
-      });
-    }
-    
-    // Create provisioning state
+    // Create an initial provisioning state
+    const now = new Date().toISOString();
     const provisioningState = await storage.createProvisioningState({
+      userId: 1,
       infrastructureType: 'ecs',
-      applicationName: config.applicationName,
-      environment: config.environment,
-      instanceType: config.instanceType,
-      containerCount: config.containerCount,
-      autoScaling: config.autoScaling,
-      status: 'in_progress',
-      userId: user.id,
-      currentStep: 'authentication',
-      logs: [{ timestamp: new Date().toISOString(), message: "Starting provisioning process..." }],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      status: 'pending',
+      currentStep: null,
+      applicationName: validatedConfig.applicationName,
+      environment: validatedConfig.environment,
+      instanceType: validatedConfig.instanceType,
+      containerCount: validatedConfig.containerCount,
+      autoScaling: validatedConfig.autoScaling,
+      logs: JSON.stringify([{
+        timestamp: now,
+        message: 'Initializing ECS provisioning...'
+      }]),
+      createdAt: now,
+      updatedAt: now
     });
     
-    // Get ECS provisioning steps
-    const ecsSteps = createEcsProvisioningSteps(credentials, config);
+    // Create the steps to provision ECS infrastructure
+    const provisioningSteps = createEcsProvisioningSteps(awsCredentials, validatedConfig);
     
-    // Start async provisioning process
-    executeStepsSequentially(
-      ecsSteps, 
-      provisioningState.id, 
-      storage
-    ).catch(err => {
-      console.error('Error in ECS provisioning process:', err);
+    // Execute steps asynchronously (don't wait for completion)
+    executeStepsSequentially(provisioningSteps, provisioningState.id, storage).catch(error => {
+      console.error('Error executing provisioning steps:', error);
     });
     
+    // Respond with success
     return res.status(200).json({
       success: true,
-      message: "ECS provisioning started",
+      message: 'ECS provisioning started',
       provisioningId: provisioningState.id
     });
     
   } catch (error) {
-    console.error("Error starting ECS provisioning:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error instanceof Error ? error.message : "Internal server error" 
+    console.error('Error starting ECS provisioning:', error);
+    
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request data',
+        errors: error.errors
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to start ECS provisioning'
     });
   }
 }
@@ -104,49 +98,43 @@ export async function startEcsProvisioning(req: Request, res: Response) {
  */
 export async function getEcsProvisioningStatus(req: Request, res: Response) {
   try {
-    const latestProvisioningState = await storage.getLatestProvisioningState();
+    // Get the latest provisioning state
+    const latestState = await storage.getLatestProvisioningState();
     
-    if (!latestProvisioningState) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "No provisioning state found" 
-      });
-    }
-    
-    // Check if this is an ECS provisioning
-    if (latestProvisioningState.infrastructureType !== 'ecs') {
-      return res.status(400).json({
+    if (!latestState) {
+      return res.status(404).json({
         success: false,
-        message: "Latest provisioning is not an ECS provisioning"
+        message: 'No provisioning process found'
       });
     }
     
-    // Format the response
-    const ecsStepDefinitions = getEcsStepDefinitions();
+    // Parse logs from JSON string
+    const logs = JSON.parse(latestState.logs || '[]');
     
-    // Map step definitions to status
-    const steps = ecsStepDefinitions.map(step => ({
+    // Get step definitions
+    const stepDefinitions = getEcsStepDefinitions();
+    
+    // Create step status array with current status
+    const steps = stepDefinitions.map(step => ({
       ...step,
-      status: getStepStatus(step.id, latestProvisioningState)
+      status: getStepStatus(step.id, latestState)
     }));
     
-    // Format logs
-    const logs = Array.isArray(latestProvisioningState.logs) 
-      ? latestProvisioningState.logs 
-      : [];
-    
     return res.status(200).json({
-      infrastructureType: latestProvisioningState.infrastructureType,
-      status: latestProvisioningState.status,
-      currentStep: latestProvisioningState.currentStep,
+      success: true,
+      status: latestState.status,
+      currentStep: latestState.currentStep,
+      infrastructureType: latestState.infrastructureType,
       steps,
-      logs
+      logs,
+      config: latestState.config
     });
+    
   } catch (error) {
-    console.error("Error getting ECS provisioning status:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error instanceof Error ? error.message : "Internal server error" 
+    console.error('Error getting ECS provisioning status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get ECS provisioning status'
     });
   }
 }
@@ -163,10 +151,10 @@ export function getEcsSteps(req: Request, res: Response) {
       steps
     });
   } catch (error) {
-    console.error("Error getting ECS steps:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error instanceof Error ? error.message : "Internal server error" 
+    console.error('Error getting ECS steps:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get ECS steps'
     });
   }
 }
@@ -175,20 +163,31 @@ export function getEcsSteps(req: Request, res: Response) {
  * Helper function to determine step status
  */
 function getStepStatus(stepId: string, state: any): 'pending' | 'in-progress' | 'completed' | 'failed' {
-  const stepOrder = ['authentication', 'vpc', 'cluster', 'task-definition', 'service', 'deployment'];
+  if (state.status === 'failed' && state.currentStep === stepId) {
+    return 'failed';
+  }
+  
+  if (state.currentStep === stepId && state.status === 'in-progress') {
+    return 'in-progress';
+  }
+  
+  // Find which step we're on in the sequence
+  const stepOrder = [
+    'authentication',
+    'vpc',
+    'cluster',
+    'task-definition',
+    'service',
+    'deployment'
+  ];
+  
   const currentStepIndex = stepOrder.indexOf(state.currentStep || '');
   const thisStepIndex = stepOrder.indexOf(stepId);
   
-  if (state.status === 'failed') {
-    return currentStepIndex === thisStepIndex ? 'failed' : 
-           thisStepIndex < currentStepIndex ? 'completed' : 'pending';
+  if (thisStepIndex < currentStepIndex || 
+      (state.status === 'completed' && thisStepIndex <= currentStepIndex)) {
+    return 'completed';
   }
   
-  if (thisStepIndex < currentStepIndex) {
-    return 'completed';
-  } else if (thisStepIndex === currentStepIndex) {
-    return state.status === 'completed' ? 'completed' : 'in-progress';
-  } else {
-    return 'pending';
-  }
+  return 'pending';
 }

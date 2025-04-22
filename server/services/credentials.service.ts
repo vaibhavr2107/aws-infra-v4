@@ -1,7 +1,8 @@
 /**
  * Service for managing AWS credentials
  */
-import { AwsCredentials } from "@shared/schema";
+
+import { AwsCredentials } from '@shared/schema';
 
 /**
  * Gets temporary credentials from the organization's internal endpoint
@@ -15,33 +16,27 @@ export async function getTemporaryCredentials(
   username: string,
   password: string
 ): Promise<AwsCredentials | null> {
-  try {
-    // Validate credentials (mock validation)
-    if (username.length < 3 || password.length < 3) {
-      console.error("Invalid credentials");
-      return null;
-    }
-    
-    // In a real implementation, this would call your internal company API
-    // For example: const response = await axios.post('https://internal-api.company.com/aws/credentials', { username, password });
-    
-    // Create expiration date 1 hour from now
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1);
-    
-    // Mock credentials for development
-    return {
-      accessKeyId: `AKIA${generateRandomString(16)}`,
-      secretAccessKey: generateRandomString(40),
-      sessionToken: generateRandomString(100),
-      expiresAt: expiresAt.toISOString(),
-      id: 0, // Will be set by storage
-      userId: 0 // Will be set by the calling code
-    };
-  } catch (error) {
-    console.error("Error getting temporary credentials:", error);
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // For demo purposes, we'll return mock credentials for any non-empty username/password
+  if (!username || !password) {
     return null;
   }
+  
+  // Simulate session token generation
+  // In a real app this would come from AWS STS or an internal authentication service
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1); // Token valid for 1 hour
+  
+  return {
+    id: 1,
+    userId: 1,
+    accessKeyId: `AKIA${generateRandomString(16)}`,
+    secretAccessKey: generateRandomString(32),
+    sessionToken: generateRandomString(48),
+    expiresAt: expiresAt.toISOString()
+  };
 }
 
 /**
