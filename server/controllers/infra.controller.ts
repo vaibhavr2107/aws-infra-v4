@@ -68,11 +68,11 @@ export async function startInfraProvisioning(req: Request, res: Response) {
       infrastructureType: 'infra',
       status: 'pending',
       currentStep: null,
-      applicationName: validatedConfig.friendlyStackName, // Use friendlyStackName as applicationName for infra
+      applicationName: validatedConfig.applicationName,
       environment: validatedConfig.environment,
-      instanceType: 't2.micro', // Default for infra
-      containerCount: 2, // Default for infra
-      autoScaling: false, // Default for infra
+      instanceType: validatedConfig.instanceType,
+      containerCount: validatedConfig.containerCount,
+      autoScaling: validatedConfig.autoScaling,
       logs: initialLogs,
       createdAt: now,
       updatedAt: now

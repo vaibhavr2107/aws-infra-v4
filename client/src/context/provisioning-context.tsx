@@ -55,6 +55,13 @@ const defaultEcsConfig: EcsConfig = {
 };
 
 const defaultInfraConfig: InfraConfig = {
+  // Common fields with ECS configuration
+  applicationName: '',
+  instanceType: 't2.micro',
+  containerCount: 2,
+  autoScaling: false,
+  
+  // Infrastructure specific fields
   friendlyStackName: '',
   environment: 'dev',
   ecsTaskRole: true,
