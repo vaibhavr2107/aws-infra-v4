@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,17 +24,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProvisioning } from "@/context/provisioning-context";
 import { ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const infraFormSchema = z.object({
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters",
   }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
     message: "Stack name can only contain letters, numbers, and hyphens"
-  }),
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters",
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
   }),
   environment: z.enum(["dev", "test", "prod"], {
     required_error: "Please select an environment",
@@ -72,7 +69,7 @@ const infraFormSchema = z.object({
 type InfraFormValues = z.infer<typeof infraFormSchema>;
 
 interface InfraConfigurationFormProps {
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled?: boolean;
   onBack?: () => void;
 }
@@ -82,28 +79,25 @@ export default function InfraConfigurationForm({
   disabled = false,
   onBack,
 }: InfraConfigurationFormProps) {
-  const { ecsConfig, infraConfig, updateEcsConfig, updateInfraConfig } = useProvisioning();
+  const { ecsConfig, infraConfig, updateInfraConfig } = useProvisioning();
+  const { toast } = useToast();
 
-  // Internal pipeline variables defaults
-  const defaultValues: Partial<InfraFormValues> = {
+  const defaultValues: InfraFormValues = {
     friendlyStackName: infraConfig?.friendlyStackName || "aws-infrastructure",
-    environment: infraConfig?.environment || 
-      ((ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
-        ? ecsConfig.environment 
-        : "dev"),
+    environment: (infraConfig?.environment || ecsConfig.environment) as "dev" | "test" | "prod",
     ecsTaskRole: true,
     provisionCoreVpc: true,
     provisionEcsSpoke: true,
     provisionEc2Spoke: true,
     provisionBorderControlSpoke: true,
-    bcAdminAdGroup: "AWS-SC-Admin-Group",
-    vpcProvisioningArtifactName: "v1.0",
-    bcProvisioningArtifactName: "v1.0",
-    bcAdminAdGroupDomain: "example.com",
-    ec2SpokeProvisioningArtifactName: "v1.0",
-    ecsSpokeProvisioningArtifactName: "v1.0",
-    linuxGroup: "LinuxAdmins",
-    windowsGroup: "WindowsAdmins",
+    bcAdminAdGroup: infraConfig?.bcAdminAdGroup || "AWS-SC-Admin-Group",
+    vpcProvisioningArtifactName: infraConfig?.vpcProvisioningArtifactName || "v1.0",
+    bcProvisioningArtifactName: infraConfig?.bcProvisioningArtifactName || "v1.0",
+    bcAdminAdGroupDomain: infraConfig?.bcAdminAdGroupDomain || "example.com",
+    ec2SpokeProvisioningArtifactName: infraConfig?.ec2SpokeProvisioningArtifactName || "v1.0",
+    ecsSpokeProvisioningArtifactName: infraConfig?.ecsSpokeProvisioningArtifactName || "v1.0",
+    linuxGroup: infraConfig?.linuxGroup || "LinuxAdmins",
+    windowsGroup: infraConfig?.windowsGroup || "WindowsAdmins",
   };
 
   const form = useForm<InfraFormValues>({
@@ -112,33 +106,23 @@ export default function InfraConfigurationForm({
   });
 
   async function handleSubmitForm(values: InfraFormValues) {
-    console.log('Form submitted with values:', values);
     try {
-      // Store detailed infrastructure values in the Infra config context only
       await updateInfraConfig({
-        friendlyStackName: values.friendlyStackName,
-      environment: values.environment,
-      ecsTaskRole: values.ecsTaskRole,
-      provisionCoreVpc: values.provisionCoreVpc,
-      provisionEcsSpoke: values.provisionEcsSpoke,
-      provisionEc2Spoke: values.provisionEc2Spoke,
-      provisionBorderControlSpoke: values.provisionBorderControlSpoke,
-      bcAdminAdGroup: values.bcAdminAdGroup,
-      vpcProvisioningArtifactName: values.vpcProvisioningArtifactName,
-      bcProvisioningArtifactName: values.bcProvisioningArtifactName,
-      bcAdminAdGroupDomain: values.bcAdminAdGroupDomain,
-      ec2SpokeProvisioningArtifactName: values.ec2SpokeProvisioningArtifactName,
-      ecsSpokeProvisioningArtifactName: values.ecsSpokeProvisioningArtifactName,
-      linuxGroup: values.linuxGroup,
-      windowsGroup: values.windowsGroup,
-    });
+        ...values,
+        environment: values.environment,
+      });
 
-      // Submit the form and pass the form event
       if (onSubmit) {
-        onSubmit(new Event("submit") as unknown as React.FormEvent);
+        const event = new Event("submit") as unknown as React.FormEvent<HTMLFormElement>;
+        onSubmit(event);
       }
     } catch (error) {
       console.error('Error updating infra config:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update infrastructure configuration",
+        variant: "destructive",
+      });
     }
   }
 
@@ -148,7 +132,6 @@ export default function InfraConfigurationForm({
         onSubmit={form.handleSubmit(handleSubmitForm)}
         className="space-y-6"
       >
-        {/* Back button */}
         {onBack && (
           <Button
             type="button"
@@ -164,7 +147,6 @@ export default function InfraConfigurationForm({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Stack Name */}
           <FormField
             control={form.control}
             name="friendlyStackName"
@@ -186,7 +168,6 @@ export default function InfraConfigurationForm({
             )}
           />
 
-          {/* Environment */}
           <FormField
             control={form.control}
             name="environment"
@@ -221,7 +202,6 @@ export default function InfraConfigurationForm({
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Infrastructure Components</h3>
 
-          {/* ECS Task Role */}
           <FormField
             control={form.control}
             name="ecsTaskRole"
@@ -244,7 +224,6 @@ export default function InfraConfigurationForm({
             )}
           />
 
-          {/* Provision Core VPC */}
           <FormField
             control={form.control}
             name="provisionCoreVpc"
@@ -267,7 +246,6 @@ export default function InfraConfigurationForm({
             )}
           />
 
-          {/* Provision ECS Spoke */}
           <FormField
             control={form.control}
             name="provisionEcsSpoke"
@@ -290,7 +268,6 @@ export default function InfraConfigurationForm({
             )}
           />
 
-          {/* Provision EC2 Spoke */}
           <FormField
             control={form.control}
             name="provisionEc2Spoke"
@@ -313,7 +290,6 @@ export default function InfraConfigurationForm({
             )}
           />
 
-          {/* Provision Border Control Spoke */}
           <FormField
             control={form.control}
             name="provisionBorderControlSpoke"
@@ -341,7 +317,6 @@ export default function InfraConfigurationForm({
           <h3 className="text-lg font-medium">Advanced Configuration</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* BC Admin AD Group */}
             <FormField
               control={form.control}
               name="bcAdminAdGroup"
@@ -360,7 +335,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* BC Admin AD Group Domain */}
             <FormField
               control={form.control}
               name="bcAdminAdGroupDomain"
@@ -379,7 +353,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* VPC Provisioning Artifact Name */}
             <FormField
               control={form.control}
               name="vpcProvisioningArtifactName"
@@ -398,7 +371,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* BC Provisioning Artifact Name */}
             <FormField
               control={form.control}
               name="bcProvisioningArtifactName"
@@ -417,7 +389,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* EC2 Spoke Provisioning Artifact Name */}
             <FormField
               control={form.control}
               name="ec2SpokeProvisioningArtifactName"
@@ -436,7 +407,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* ECS Spoke Provisioning Artifact Name */}
             <FormField
               control={form.control}
               name="ecsSpokeProvisioningArtifactName"
@@ -455,7 +425,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* Linux Group */}
             <FormField
               control={form.control}
               name="linuxGroup"
@@ -474,7 +443,6 @@ export default function InfraConfigurationForm({
               )}
             />
 
-            {/* Windows Group */}
             <FormField
               control={form.control}
               name="windowsGroup"
