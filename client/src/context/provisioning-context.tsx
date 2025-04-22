@@ -74,7 +74,7 @@ const defaultInfraConfig: InfraConfig = {
 
 const ProvisioningContext = createContext<ProvisioningContextType | undefined>(undefined);
 
-export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
+export function ProvisioningProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState<'landing' | 'ecs' | 'eks' | 'infra'>('landing');
   const [awsCredentials, setAwsCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
@@ -84,7 +84,7 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   
   // Query for provisioning status
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['/api/provision/status'],
+    queryKey: ['/api/ecs/status'],
     enabled: false, // Don't fetch on mount
   });
   
@@ -243,7 +243,7 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useProvisioning = () => {
+export function useProvisioning() {
   const context = useContext(ProvisioningContext);
   
   if (context === undefined) {
