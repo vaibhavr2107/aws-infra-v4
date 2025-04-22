@@ -52,10 +52,10 @@ export async function startEcsProvisioning(req: Request, res: Response) {
       instanceType: validatedConfig.instanceType,
       containerCount: validatedConfig.containerCount,
       autoScaling: validatedConfig.autoScaling,
-      logs: JSON.stringify([{
+      logs: [{
         timestamp: now,
         message: 'Initializing ECS provisioning...'
-      }]),
+      }],
       createdAt: now,
       updatedAt: now
     });
@@ -108,8 +108,8 @@ export async function getEcsProvisioningStatus(req: Request, res: Response) {
       });
     }
     
-    // Parse logs from JSON string
-    const logs = JSON.parse(latestState.logs || '[]');
+    // Get logs from state - they're already a JSONB object
+    const logs = latestState.logs || [];
     
     // Get step definitions
     const stepDefinitions = getEcsStepDefinitions();
@@ -120,6 +120,15 @@ export async function getEcsProvisioningStatus(req: Request, res: Response) {
       status: getStepStatus(step.id, latestState)
     }));
     
+    // Create config object from state properties
+    const config = {
+      applicationName: latestState.applicationName,
+      environment: latestState.environment,
+      instanceType: latestState.instanceType,
+      containerCount: latestState.containerCount,
+      autoScaling: latestState.autoScaling
+    };
+    
     return res.status(200).json({
       success: true,
       status: latestState.status,
@@ -127,7 +136,7 @@ export async function getEcsProvisioningStatus(req: Request, res: Response) {
       infrastructureType: latestState.infrastructureType,
       steps,
       logs,
-      config: latestState.config
+      config
     });
     
   } catch (error) {
