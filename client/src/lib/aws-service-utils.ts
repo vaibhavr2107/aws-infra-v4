@@ -26,15 +26,14 @@ export async function startProvisioning(
   credentials: AwsCredentialsRequest,
   config: EcsConfig
 ) {
-  return await apiRequest<ProvisioningResponse>('/api/provision/start', {
+  return await apiRequest<ProvisioningResponse>('/api/ecs/provision', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       credentials,
-      config,
-      type: 'ecs'
+      config
     }),
   });
 }
@@ -44,7 +43,7 @@ export async function startProvisioning(
  * @returns Current provisioning state
  */
 export async function getProvisioningStatus(): Promise<ProvisioningState> {
-  return await apiRequest<ProvisioningState>('/api/provision/status', {
+  return await apiRequest<ProvisioningState>('/api/ecs/status', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
