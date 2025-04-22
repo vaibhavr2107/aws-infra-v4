@@ -6,6 +6,7 @@ import {
   EcsConfig, 
   ProvisioningState 
 } from '@/lib/types';
+import { InfraConfig } from '@/lib/types/infra-config';
 import { 
   getProvisioningStatus, 
   startProvisioning, 
@@ -22,8 +23,10 @@ interface ProvisioningContextType {
   isLoading: boolean;
   awsCredentials: AwsCredentialsRequest;
   ecsConfig: EcsConfig;
+  infraConfig?: InfraConfig;
   updateAwsCredentials: (credentials: Partial<AwsCredentialsRequest>) => void;
   updateEcsConfig: (config: Partial<EcsConfig>) => void;
+  updateInfraConfig: (config: Partial<InfraConfig>) => void;
   startProvisioningProcess: () => Promise<void>;
   resetProvisioning: () => void;
   currentPage: 'landing' | 'ecs' | 'eks' | 'infra';
@@ -51,6 +54,24 @@ const defaultEcsConfig: EcsConfig = {
   autoScaling: false,
 };
 
+const defaultInfraConfig: InfraConfig = {
+  friendlyStackName: '',
+  environment: 'dev',
+  ecsTaskRole: true,
+  provisionCoreVpc: true,
+  provisionEcsSpoke: true,
+  provisionEc2Spoke: true,
+  provisionBorderControlSpoke: true,
+  bcAdminAdGroup: 'AWS-SC-Admin-Group',
+  vpcProvisioningArtifactName: 'v1.0',
+  bcProvisioningArtifactName: 'v1.0',
+  bcAdminAdGroupDomain: 'example.com',
+  ec2SpokeProvisioningArtifactName: 'v1.0',
+  ecsSpokeProvisioningArtifactName: 'v1.0',
+  linuxGroup: 'LinuxAdmins',
+  windowsGroup: 'WindowsAdmins',
+};
+
 const ProvisioningContext = createContext<ProvisioningContextType | undefined>(undefined);
 
 export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
@@ -58,6 +79,7 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   const [currentPage, setCurrentPage] = useState<'landing' | 'ecs' | 'eks' | 'infra'>('landing');
   const [awsCredentials, setAwsCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
   const [ecsConfig, setEcsConfig] = useState<EcsConfig>(defaultEcsConfig);
+  const [infraConfig, setInfraConfig] = useState<InfraConfig>(defaultInfraConfig);
   const [provisioningState, setProvisioningState] = useState<ProvisioningState>(defaultProvisioningState);
   
   // Query for provisioning status
@@ -102,6 +124,14 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   // Update ECS configuration
   const updateEcsConfig = (config: Partial<EcsConfig>) => {
     setEcsConfig(prev => ({
+      ...prev,
+      ...config,
+    }));
+  };
+  
+  // Update Infrastructure configuration
+  const updateInfraConfig = (config: Partial<InfraConfig>) => {
+    setInfraConfig(prev => ({
       ...prev,
       ...config,
     }));

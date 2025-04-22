@@ -5,6 +5,7 @@ import {
   ProvisioningLog, 
   ProvisioningStep as Step 
 } from './types';
+import { InfraConfig } from './types/infra-config';
 import { formatLog } from './aws-service-utils';
 import { apiRequest } from './queryClient';
 
@@ -94,13 +95,37 @@ export async function getInfraSteps() {
 /**
  * Start the infrastructure provisioning process
  * @param credentials AWS username and password
- * @param config Infrastructure configuration
+ * @param config Basic infrastructure configuration
+ * @param infraConfig Detailed infrastructure configuration
  * @returns Provisioning response
  */
 export async function startInfraProvisioning(
   credentials: AwsCredentialsRequest,
-  config: EcsConfig
+  config: EcsConfig,
+  infraConfig?: InfraConfig
 ) {
+  // Merge the basic config with detailed infrastructure config if provided
+  const configToSend = infraConfig 
+    ? {
+        ...config,
+        friendlyStackName: infraConfig.friendlyStackName,
+        environment: infraConfig.environment,
+        ecsTaskRole: infraConfig.ecsTaskRole,
+        provisionCoreVpc: infraConfig.provisionCoreVpc,
+        provisionEcsSpoke: infraConfig.provisionEcsSpoke,
+        provisionEc2Spoke: infraConfig.provisionEc2Spoke,
+        provisionBorderControlSpoke: infraConfig.provisionBorderControlSpoke,
+        bcAdminAdGroup: infraConfig.bcAdminAdGroup,
+        vpcProvisioningArtifactName: infraConfig.vpcProvisioningArtifactName,
+        bcProvisioningArtifactName: infraConfig.bcProvisioningArtifactName,
+        bcAdminAdGroupDomain: infraConfig.bcAdminAdGroupDomain,
+        ec2SpokeProvisioningArtifactName: infraConfig.ec2SpokeProvisioningArtifactName,
+        ecsSpokeProvisioningArtifactName: infraConfig.ecsSpokeProvisioningArtifactName,
+        linuxGroup: infraConfig.linuxGroup,
+        windowsGroup: infraConfig.windowsGroup,
+      }
+    : config;
+
   const response = await apiRequest<{ success: boolean, message: string, provisioningId: number }>(
     '/api/infra/start',
     {
@@ -110,7 +135,7 @@ export async function startInfraProvisioning(
       },
       body: JSON.stringify({
         credentials,
-        config,
+        config: configToSend,
         infrastructureType: 'infra',
       }),
     }
