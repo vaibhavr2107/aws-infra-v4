@@ -71,15 +71,41 @@ export const awsCredentialsRequestSchema = z.object({
 });
 
 export const provisioningConfigSchema = z.object({
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters"
+  friendlyStackName: z.string().min(3, {
+    message: "Stack name must be at least 3 characters"
   }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
+    message: "Stack name can only contain letters, numbers, and hyphens"
   }),
-  environment: z.enum(["dev", "test", "staging", "prod"]),
-  instanceType: z.string(),
-  containerCount: z.number().min(1).max(10),
-  autoScaling: z.boolean(),
+  environment: z.enum(["dev", "test", "prod"]),
+  ecsTaskRole: z.boolean(),
+  provisionCoreVpc: z.boolean(),
+  provisionEcsSpoke: z.boolean(),
+  provisionEc2Spoke: z.boolean(),
+  provisionBorderControlSpoke: z.boolean(),
+  bcAdminAdGroup: z.string().min(3, {
+    message: "Admin group name must be at least 3 characters"
+  }),
+  vpcProvisioningArtifactName: z.string().min(1, {
+    message: "VPC artifact name is required"
+  }),
+  bcProvisioningArtifactName: z.string().min(1, {
+    message: "Border controls artifact name is required"
+  }),
+  bcAdminAdGroupDomain: z.string().min(3, {
+    message: "Admin group domain must be at least 3 characters"
+  }),
+  ec2SpokeProvisioningArtifactName: z.string().min(1, {
+    message: "EC2 spoke artifact name is required"
+  }),
+  ecsSpokeProvisioningArtifactName: z.string().min(1, {
+    message: "ECS spoke artifact name is required"
+  }),
+  linuxGroup: z.string().min(3, {
+    message: "Linux group name must be at least 3 characters"
+  }),
+  windowsGroup: z.string().min(3, {
+    message: "Windows group name must be at least 3 characters"
+  })
 });
 
 // Export types
