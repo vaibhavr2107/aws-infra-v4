@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useProvisioning } from "@/context/provisioning-context";
 import AwsCredentialForm from "@/components/aws-credential-form";
-import EcsConfigurationForm from "@/components/ecs-configuration-form";
+import InfraConfigurationForm from "@/components/infra-configuration-form";
 import ActivityMonitor from "@/components/ui/activity-monitor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { infraSteps } from "@/lib/infra-service-utils";
+import InfraWorkflow from "@/components/workflow/InfraWorkflow";
 
 const InfraDashboard: React.FC = () => {
   const [_, navigate] = useLocation();
@@ -131,7 +132,7 @@ const InfraDashboard: React.FC = () => {
                           onNext={handleCredentialNext}
                         />
                       ) : (
-                        <EcsConfigurationForm
+                        <InfraConfigurationForm
                           onSubmit={handleSubmit}
                           disabled={isLoading || hasStarted}
                           onBack={handleFormBack}
@@ -181,15 +182,6 @@ const InfraDashboard: React.FC = () => {
                             
                             <div className="text-gray-500">Environment</div>
                             <div className="capitalize">{ecsConfig.environment}</div>
-                            
-                            <div className="text-gray-500">Instance Type</div>
-                            <div>{ecsConfig.instanceType}</div>
-                            
-                            <div className="text-gray-500">Container Count</div>
-                            <div>{ecsConfig.containerCount}</div>
-                            
-                            <div className="text-gray-500">Auto Scaling</div>
-                            <div>{ecsConfig.autoScaling ? "Enabled" : "Disabled"}</div>
                           </div>
                         </div>
                       </div>
@@ -214,10 +206,39 @@ const InfraDashboard: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Activity Monitor Card moved to the bottom */}
+              {hasStarted && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Provisioning Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ActivityMonitor
+                      logs={provisioningState.logs || []}
+                      status={provisioningState.status || "pending"}
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </div>
             
             <div>
               <Card>
+                <CardHeader>
+                  <CardTitle>Infrastructure Workflow</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <InfraWorkflow
+                    steps={infraSteps}
+                    currentStep={currentStepId}
+                    status={status}
+                  />
+                </CardContent>
+              </Card>
+              
+              {/* Service Catalog Info Card moved below workflow */}
+              <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>About Service Catalog</CardTitle>
                 </CardHeader>
@@ -225,18 +246,6 @@ const InfraDashboard: React.FC = () => {
                   <p>
                     AWS Service Catalog allows you to centrally manage commonly deployed infrastructure and applications.
                   </p>
-                  
-                  <div>
-                    <h4 className="font-medium mb-1">This provision workflow:</h4>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Securely sets up AWS authentication</li>
-                      <li>Validates credentials with AWS STS</li>
-                      <li>Fetches Service Catalog product metadata</li>
-                      <li>Provisions IAM roles for required access</li>
-                      <li>Sets up core infrastructure components</li>
-                      <li>Deploys service-specific resources</li>
-                    </ul>
-                  </div>
                   
                   <p>
                     Service Catalog products used:
