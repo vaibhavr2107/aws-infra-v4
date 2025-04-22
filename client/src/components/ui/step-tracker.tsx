@@ -1,90 +1,76 @@
 import React from 'react';
-import { ProvisioningStep } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  CheckCircle2, 
-  Circle, 
-  AlertCircle, 
-  Clock,
-  LoaderCircle
-} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Check, CheckCircle2, Circle, Clock, TerminalSquare } from 'lucide-react';
+
+interface Step {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+}
 
 interface StepTrackerProps {
-  steps: ProvisioningStep[];
+  steps: Step[];
   currentStep: string | null;
 }
 
 const StepTracker: React.FC<StepTrackerProps> = ({ steps, currentStep }) => {
+  if (!steps || steps.length === 0) {
+    return <div>No steps defined.</div>;
+  }
+  
+  // Find the index of the current step
+  const currentStepIndex = currentStep ? steps.findIndex(step => step.id === currentStep) : -1;
+  
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-xl">Provisioning Steps</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-4">
-          {steps.map((step, index) => {
-            // Determine the status icon based on the step's status
-            let Icon;
-            let iconColor;
-            let stepColor;
-            let lineColor;
-            
-            switch (step.status) {
-              case 'completed':
-                Icon = CheckCircle2;
-                iconColor = 'text-green-500';
-                stepColor = 'text-green-700';
-                lineColor = 'bg-green-500';
-                break;
-              case 'in-progress':
-                Icon = LoaderCircle;
-                iconColor = 'text-blue-500 animate-spin';
-                stepColor = 'text-blue-700';
-                lineColor = 'bg-blue-500';
-                break;
-              case 'failed':
-                Icon = AlertCircle;
-                iconColor = 'text-red-500';
-                stepColor = 'text-red-700';
-                lineColor = 'bg-red-500';
-                break;
-              case 'pending':
-              default:
-                Icon = Circle;
-                iconColor = 'text-gray-300';
-                stepColor = 'text-gray-500';
-                lineColor = 'bg-gray-200';
-                break;
-            }
-            
-            return (
-              <li key={step.id} className="relative flex items-start">
-                <div className={`flex-shrink-0 h-6 w-6 rounded-full ${iconColor}`}>
-                  <Icon className="h-6 w-6" />
+    <div className="border rounded-lg p-4 bg-white">
+      <h3 className="text-lg font-medium mb-4">Provisioning Steps</h3>
+      <div className="space-y-4">
+        {steps.map((step, index) => {
+          // Step status
+          const isCompleted = currentStepIndex > index;
+          const isCurrent = currentStep === step.id;
+          const isPending = !isCompleted && !isCurrent;
+          
+          // Determine icon
+          let icon;
+          if (isCompleted) {
+            icon = <CheckCircle2 className="h-5 w-5 text-green-500" />;
+          } else if (isCurrent) {
+            icon = <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full" />;
+          } else {
+            icon = <Clock className="h-5 w-5 text-gray-400" />;
+          }
+          
+          return (
+            <div 
+              key={step.id}
+              className={cn(
+                "flex items-start",
+                isCompleted && "text-green-700",
+                isCurrent && "text-blue-700",
+                isPending && "text-gray-500"
+              )}
+            >
+              <div className="flex-shrink-0 mt-1">{icon}</div>
+              <div className="ml-3">
+                <div className={cn(
+                  "text-sm font-medium",
+                  isCompleted && "text-green-700",
+                  isCurrent && "text-blue-700",
+                  isPending && "text-gray-600"
+                )}>
+                  {step.title}
                 </div>
-                
-                {/* Line connecting to the next step */}
-                {index < steps.length - 1 && (
-                  <div 
-                    className={`absolute top-6 left-3 w-0.5 h-full -ml-px ${lineColor}`}
-                    style={{ height: 'calc(100% - 1.5rem)' }}
-                  />
-                )}
-                
-                <div className="ml-4 mt-0.5 min-w-0 flex-1">
-                  <h3 className={`text-sm font-medium ${stepColor}`}>
-                    {step.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {step.description}
-                  </p>
+                <div className="mt-0.5 text-xs text-gray-500">
+                  {step.description}
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      </CardContent>
-    </Card>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
