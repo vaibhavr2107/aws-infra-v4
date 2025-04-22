@@ -14,8 +14,13 @@ import {
  * @returns Response from AWS credentials API
  */
 export async function getAwsCredentials(credentials: AwsCredentialsRequest) {
-  const response = await apiRequest('POST', '/api/aws/credentials', credentials);
-  return await response.json();
+  return await apiRequest('/api/aws/credentials', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(credentials)
+  });
 }
 
 /**
@@ -26,13 +31,19 @@ export async function getAwsCredentials(credentials: AwsCredentialsRequest) {
  */
 export async function startEcsProvisioning(
   credentials: AwsCredentialsRequest,
-  config: ProvisioningConfig
+  config: EcsConfig
 ) {
-  const response = await apiRequest('POST', '/api/ecs/provision', {
-    credentials,
-    config
+  return await apiRequest('/api/provision/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      credentials,
+      config,
+      type: 'ecs'
+    })
   });
-  return await response.json();
 }
 
 /**
@@ -40,8 +51,12 @@ export async function startEcsProvisioning(
  * @returns Current provisioning status
  */
 export async function getEcsProvisioningStatus() {
-  const response = await apiRequest('GET', '/api/ecs/status');
-  return await response.json();
+  return await apiRequest('/api/provision/status', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
 }
 
 /**
@@ -49,8 +64,12 @@ export async function getEcsProvisioningStatus() {
  * @returns List of ECS provisioning steps
  */
 export async function getEcsSteps() {
-  const response = await apiRequest('GET', '/api/ecs/steps');
-  return await response.json();
+  return await apiRequest('/api/ecs/steps', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
 }
 
 /**
@@ -71,7 +90,7 @@ export function validateAwsCredentials(credentials: AwsCredentialsRequest): stri
 /**
  * Validate ECS configuration
  */
-export function validateEcsConfig(config: ProvisioningConfig): string | null {
+export function validateEcsConfig(config: EcsConfig): string | null {
   if (!config.applicationName || config.applicationName.length < 3) {
     return "Application name must be at least 3 characters";
   }

@@ -61,7 +61,7 @@ export async function startEcsProvisioning(req: Request, res: Response) {
     });
     
     // Create the steps to provision ECS infrastructure
-    const provisioningSteps = createEcsProvisioningSteps(awsCredentials, validatedConfig);
+    const provisioningSteps = createEcsProvisioningSteps(awsCredentials, validatedConfig, storage);
     
     // Execute steps asynchronously (don't wait for completion)
     executeStepsSequentially(provisioningSteps, provisioningState.id, storage).catch(error => {

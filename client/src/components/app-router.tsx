@@ -1,28 +1,32 @@
-import React from "react";
-import { useProvisioning } from "@/context/provisioning-context";
-import Landing from "@/pages/landing";
-import EcsDashboard from "@/pages/ecs-dashboard";
-import { useLocation, useRedirect } from "wouter";
+import React from 'react';
+import { useLocation } from 'wouter';
+import { useProvisioning } from '@/context/provisioning-context';
+import Landing from '@/pages/landing';
+import EcsDashboard from '@/pages/ecs-dashboard';
 
 const AppRouter: React.FC = () => {
   const { currentPage } = useProvisioning();
-  const [location, setLocation] = useLocation();
-  
-  // Handle routing based on currentPage in context
+  const [, setLocation] = useLocation();
+
+  // Effect to sync the currentPage state with the URL location
   React.useEffect(() => {
-    if (currentPage === 'ecs' && location !== '/dashboard/ecs') {
-      setLocation('/dashboard/ecs');
-    } else if (currentPage === 'landing' && location !== '/') {
-      setLocation('/');
-    }
-  }, [currentPage, location, setLocation]);
-  
-  // Show dashboard when path is /dashboard/ecs
-  if (location === '/dashboard/ecs') {
+    // Map currentPage to URL paths
+    const pathMap = {
+      'landing': '/',
+      'ecs': '/dashboard/ecs',
+      'eks': '/dashboard/eks'
+    };
+
+    // Set the location based on currentPage
+    setLocation(pathMap[currentPage]);
+  }, [currentPage, setLocation]);
+
+  // Render appropriate component based on currentPage
+  if (currentPage === 'ecs') {
     return <EcsDashboard />;
   }
-  
-  // Default to landing page
+
+  // Default to landing
   return <Landing />;
 };
 
