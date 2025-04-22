@@ -6,15 +6,16 @@ import EcsDashboard from '@/pages/ecs-dashboard';
 import InfraDashboard from '@/pages/infra-dashboard';
 
 const AppRouter: React.FC = () => {
-  const { currentPage } = useProvisioning();
   const [location] = useLocation();
 
-  // Render appropriate component based on location
-  if (location === '/dashboard/ecs') {
-    return <EcsDashboard />;
-  } else if (location === '/dashboard/infra') {
-    return <InfraDashboard />;
-  }
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      {location === '/dashboard/ecs' && <EcsDashboard />}
+      {location === '/dashboard/infra' && <InfraDashboard />}
+      {location === '/' && <Landing />}
+    </div>
+  );
 
   // Default to landing
   return <Landing />;
