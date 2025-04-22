@@ -2,6 +2,7 @@ import { AwsCredentials } from '@shared/schema';
 import { IStorage } from '../storage';
 import { ProvisioningStep } from '../utils/syncStepExecutor';
 import { ProvisioningConfig } from '@shared/schema';
+import { isDummyMode } from '../utils/config';
 
 /**
  * Creates a list of ECS provisioning steps
@@ -243,8 +244,13 @@ export function getEcsStepDefinitions() {
 
 /**
  * Simulates step execution with a delay
+ * In dummy mode, delays will be significantly reduced for faster testing
+ * 
  * @param ms Milliseconds to delay
  */
 async function simulateStepExecution(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  // In dummy mode, drastically reduce the delay time
+  const actualDelay = isDummyMode() ? Math.min(300, ms / 5) : ms;
+  
+  return new Promise(resolve => setTimeout(resolve, actualDelay));
 }
