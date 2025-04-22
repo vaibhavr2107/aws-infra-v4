@@ -7,26 +7,12 @@ import InfraDashboard from '@/pages/infra-dashboard';
 
 const AppRouter: React.FC = () => {
   const { currentPage } = useProvisioning();
-  const [, setLocation] = useLocation();
+  const [location] = useLocation();
 
-  // Effect to sync the currentPage state with the URL location
-  React.useEffect(() => {
-    // Map currentPage to URL paths
-    const pathMap: Record<string, string> = {
-      'landing': '/',
-      'ecs': '/dashboard/ecs',
-      'eks': '/dashboard/eks',
-      'infra': '/dashboard/infra'
-    };
-
-    // Set the location based on currentPage
-    setLocation(pathMap[currentPage]);
-  }, [currentPage, setLocation]);
-
-  // Render appropriate component based on currentPage
-  if (currentPage === 'ecs') {
+  // Render appropriate component based on location
+  if (location === '/dashboard/ecs') {
     return <EcsDashboard />;
-  } else if (currentPage === 'infra') {
+  } else if (location === '/dashboard/infra') {
     return <InfraDashboard />;
   }
 
