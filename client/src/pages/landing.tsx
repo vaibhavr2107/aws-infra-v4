@@ -1,9 +1,11 @@
 import React from "react";
 import { useProvisioning } from "@/context/provisioning-context";
 import InfrastructureCard from "@/components/infrastructure-card";
+import { useLocation } from "wouter";
 
 const Landing: React.FC = () => {
   const { navigateTo } = useProvisioning();
+  const [_, navigate] = useLocation();
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -16,7 +18,7 @@ const Landing: React.FC = () => {
         </p>
       </div>
       
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-8">
         <InfrastructureCard
           type="ecs"
           title="Elastic Container Service"
@@ -31,6 +33,19 @@ const Landing: React.FC = () => {
           description="Managed Kubernetes service to run Kubernetes in the AWS cloud."
           isAvailable={false}
           onClick={() => {}} // No action for unavailable option
+        />
+      </div>
+      
+      <div className="grid md:grid-cols-1 gap-8 max-w-4xl mx-auto">
+        <InfrastructureCard
+          type="infra"
+          title="Service Catalog Infrastructure"
+          description="Provision infrastructure using AWS Service Catalog with IAM roles, VPC, and more."
+          isAvailable={true}
+          onClick={() => {
+            navigateTo('infra');
+            navigate('/dashboard/infra');
+          }}
         />
       </div>
     </div>

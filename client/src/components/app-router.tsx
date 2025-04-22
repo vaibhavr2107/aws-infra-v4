@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useProvisioning } from '@/context/provisioning-context';
 import Landing from '@/pages/landing';
 import EcsDashboard from '@/pages/ecs-dashboard';
+import InfraDashboard from '@/pages/infra-dashboard';
 
 const AppRouter: React.FC = () => {
   const { currentPage } = useProvisioning();
@@ -11,10 +12,11 @@ const AppRouter: React.FC = () => {
   // Effect to sync the currentPage state with the URL location
   React.useEffect(() => {
     // Map currentPage to URL paths
-    const pathMap = {
+    const pathMap: Record<string, string> = {
       'landing': '/',
       'ecs': '/dashboard/ecs',
-      'eks': '/dashboard/eks'
+      'eks': '/dashboard/eks',
+      'infra': '/dashboard/infra'
     };
 
     // Set the location based on currentPage
@@ -24,6 +26,8 @@ const AppRouter: React.FC = () => {
   // Render appropriate component based on currentPage
   if (currentPage === 'ecs') {
     return <EcsDashboard />;
+  } else if (currentPage === 'infra') {
+    return <InfraDashboard />;
   }
 
   // Default to landing

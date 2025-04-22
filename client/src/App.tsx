@@ -7,6 +7,7 @@ import { ProvisioningProvider } from "@/context/provisioning-context";
 import Navbar from "@/components/navbar";
 import Landing from "@/pages/landing";
 import EcsDashboard from "@/pages/ecs-dashboard";
+import InfraDashboard from "@/pages/infra-dashboard";
 import NotFound from "@/pages/not-found";
 import AppRouter from "@/components/app-router";
 
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path="/" component={AppRouter} />
       <Route path="/dashboard/ecs" component={EcsDashboard} />
+      <Route path="/dashboard/infra" component={InfraDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

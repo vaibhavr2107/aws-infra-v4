@@ -1,11 +1,11 @@
 import React from 'react';
-import { SiAmazonecs, SiKubernetes } from "react-icons/si";
+import { SiAmazonecs, SiKubernetes, SiAmazon } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 
 interface InfrastructureCardProps {
-  type: 'ecs' | 'eks';
+  type: 'ecs' | 'eks' | 'infra';
   title: string;
   description: string;
   isAvailable?: boolean;
@@ -20,7 +20,14 @@ const InfrastructureCard: React.FC<InfrastructureCardProps> = ({
   onClick
 }) => {
   // Determine icon based on type
-  const IconComponent = type === 'ecs' ? SiAmazonecs : SiKubernetes;
+  let IconComponent;
+  if (type === 'ecs') {
+    IconComponent = SiAmazonecs;
+  } else if (type === 'eks') {
+    IconComponent = SiKubernetes;
+  } else {
+    IconComponent = SiAmazon;
+  }
   
   return (
     <Card className={cn(
@@ -30,7 +37,7 @@ const InfrastructureCard: React.FC<InfrastructureCardProps> = ({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-center h-14 mb-2">
           <IconComponent size={48} className={cn(
-            type === 'ecs' ? "text-aws-blue" : "text-blue-600"
+            type === 'ecs' || type === 'infra' ? "text-aws-blue" : "text-blue-600"
           )} />
         </div>
         <CardTitle className="text-xl font-semibold text-center">
@@ -49,7 +56,7 @@ const InfrastructureCard: React.FC<InfrastructureCardProps> = ({
           disabled={!isAvailable}
           className={cn(
             "w-full",
-            type === 'ecs' ? "bg-aws-blue hover:bg-aws-blue/90" : ""
+            (type === 'ecs' || type === 'infra') ? "bg-aws-blue hover:bg-aws-blue/90" : ""
           )}
         >
           {isAvailable ? "Start Provisioning" : "Coming Soon"}

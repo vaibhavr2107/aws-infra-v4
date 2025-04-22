@@ -55,7 +55,7 @@ export interface AwsCredentialsRequest {
  * Provisioning state
  */
 export interface ProvisioningState {
-  infrastructureType: 'ecs' | 'eks';
+  infrastructureType: 'ecs' | 'eks' | 'infra';
   status: 'pending' | 'in-progress' | 'completed' | 'failed';
   currentStep: string | null;
   steps: ProvisioningStep[];
