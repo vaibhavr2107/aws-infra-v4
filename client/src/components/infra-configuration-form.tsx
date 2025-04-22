@@ -75,12 +75,14 @@ export default function InfraConfigurationForm({
   disabled = false,
   onBack,
 }: InfraConfigurationFormProps) {
-  const { ecsConfig, updateEcsConfig } = useProvisioning();
+  const { ecsConfig, infraConfig, updateEcsConfig, updateInfraConfig } = useProvisioning();
 
   // Internal pipeline variables defaults
   const defaultValues: Partial<InfraFormValues> = {
     friendlyStackName: ecsConfig.applicationName || "my-infrastructure",
-    environment: ecsConfig.environment || "dev",
+    environment: (ecsConfig.environment === "dev" || ecsConfig.environment === "test" || ecsConfig.environment === "prod") 
+      ? ecsConfig.environment 
+      : "dev",
     ecsTaskRole: true,
     provisionCoreVpc: true,
     provisionEcsSpoke: true,
@@ -102,10 +104,29 @@ export default function InfraConfigurationForm({
   });
 
   function handleSubmitForm(values: InfraFormValues) {
-    // Store values in the provisioning context
+    // Store basic values in the ECS config context
     updateEcsConfig({
       applicationName: values.friendlyStackName,
       environment: values.environment,
+    });
+    
+    // Store detailed infrastructure values in the Infra config context
+    updateInfraConfig({
+      friendlyStackName: values.friendlyStackName,
+      environment: values.environment,
+      ecsTaskRole: values.ecsTaskRole,
+      provisionCoreVpc: values.provisionCoreVpc,
+      provisionEcsSpoke: values.provisionEcsSpoke,
+      provisionEc2Spoke: values.provisionEc2Spoke,
+      provisionBorderControlSpoke: values.provisionBorderControlSpoke,
+      bcAdminAdGroup: values.bcAdminAdGroup,
+      vpcProvisioningArtifactName: values.vpcProvisioningArtifactName,
+      bcProvisioningArtifactName: values.bcProvisioningArtifactName,
+      bcAdminAdGroupDomain: values.bcAdminAdGroupDomain,
+      ec2SpokeProvisioningArtifactName: values.ec2SpokeProvisioningArtifactName,
+      ecsSpokeProvisioningArtifactName: values.ecsSpokeProvisioningArtifactName,
+      linuxGroup: values.linuxGroup,
+      windowsGroup: values.windowsGroup,
     });
 
     // Submit the form

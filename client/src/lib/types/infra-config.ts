@@ -3,7 +3,7 @@
  */
 export interface InfraConfig {
   friendlyStackName: string;
-  environment: 'dev' | 'test' | 'prod';
+  environment: 'dev' | 'test' | 'prod';  // Match EcsConfig environment options
   ecsTaskRole: boolean;
   provisionCoreVpc: boolean;
   provisionEcsSpoke: boolean;
