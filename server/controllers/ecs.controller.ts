@@ -5,12 +5,19 @@ import { ZodError } from 'zod';
 import { createEcsProvisioningSteps, getEcsStepDefinitions } from '../services/awsEcsSteps.service';
 import { executeStepsSequentially } from '../utils/syncStepExecutor';
 import { getTemporaryCredentials } from '../services/credentials.service';
+import { isDummyMode, generateMockResponse } from '../utils/config';
 
 /**
  * Start the ECS provisioning process
  */
 export async function startEcsProvisioning(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Using mocked ECS provisioning');
+    }
+
     // Validate request body
     const { credentials, config } = req.body;
     
@@ -42,6 +49,16 @@ export async function startEcsProvisioning(req: Request, res: Response) {
     
     // Create an initial provisioning state
     const now = new Date().toISOString();
+    const initialLogs = dummyMode 
+      ? [{ 
+          timestamp: now, 
+          message: 'Initializing ECS provisioning in AWS_DUMMY mode (all AWS operations will be mocked)...' 
+        }]
+      : [{ 
+          timestamp: now, 
+          message: 'Initializing ECS provisioning...' 
+        }];
+
     const provisioningState = await storage.createProvisioningState({
       userId: 1,
       infrastructureType: 'ecs',
@@ -52,10 +69,7 @@ export async function startEcsProvisioning(req: Request, res: Response) {
       instanceType: validatedConfig.instanceType,
       containerCount: validatedConfig.containerCount,
       autoScaling: validatedConfig.autoScaling,
-      logs: [{
-        timestamp: now,
-        message: 'Initializing ECS provisioning...'
-      }],
+      logs: initialLogs,
       createdAt: now,
       updatedAt: now
     });
@@ -71,8 +85,11 @@ export async function startEcsProvisioning(req: Request, res: Response) {
     // Respond with success
     return res.status(200).json({
       success: true,
-      message: 'ECS provisioning started',
-      provisioningId: provisioningState.id
+      message: dummyMode 
+        ? 'ECS provisioning started in AWS_DUMMY mode (mock operations)'
+        : 'ECS provisioning started',
+      provisioningId: provisioningState.id,
+      dummyMode: dummyMode // Include dummy mode flag in response
     });
     
   } catch (error) {

@@ -8,12 +8,19 @@ import { storage } from '../storage';
 import { getTemporaryCredentials } from '../services/credentials.service';
 import { createInfraProvisioningSteps, getInfraStepDefinitions } from '../services/awsInfraSteps.service';
 import { executeStepsSequentially } from '../utils/syncStepExecutor';
+import { isDummyMode, generateMockResponse } from '../utils/config';
 
 /**
  * Start the Infrastructure provisioning process
  */
 export async function startInfraProvisioning(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Using mocked Infrastructure provisioning');
+    }
+
     // Validate request body
     const { credentials, config } = req.body;
     
@@ -45,6 +52,16 @@ export async function startInfraProvisioning(req: Request, res: Response) {
     
     // Create an initial provisioning state
     const now = new Date().toISOString();
+    const initialLogs = dummyMode 
+      ? [{ 
+          timestamp: now, 
+          message: 'Initializing infrastructure provisioning in AWS_DUMMY mode (all AWS operations will be mocked)...' 
+        }]
+      : [{ 
+          timestamp: now, 
+          message: 'Initializing infrastructure provisioning...' 
+        }];
+        
     const provisioningState = await storage.createProvisioningState({
       userId: 1,
       infrastructureType: 'infra',
@@ -55,10 +72,7 @@ export async function startInfraProvisioning(req: Request, res: Response) {
       instanceType: validatedConfig.instanceType,
       containerCount: validatedConfig.containerCount,
       autoScaling: validatedConfig.autoScaling,
-      logs: [{
-        timestamp: now,
-        message: 'Initializing infrastructure provisioning...'
-      }],
+      logs: initialLogs,
       createdAt: now,
       updatedAt: now
     });
@@ -74,8 +88,11 @@ export async function startInfraProvisioning(req: Request, res: Response) {
     // Respond with success
     return res.status(200).json({
       success: true,
-      message: 'Infrastructure provisioning started',
-      provisioningId: provisioningState.id
+      message: dummyMode 
+        ? 'Infrastructure provisioning started in AWS_DUMMY mode (mock operations)' 
+        : 'Infrastructure provisioning started',
+      provisioningId: provisioningState.id,
+      dummyMode: dummyMode // Include dummy mode flag in response
     });
     
   } catch (error) {
@@ -101,6 +118,12 @@ export async function startInfraProvisioning(req: Request, res: Response) {
  */
 export async function getInfraProvisioningStatus(req: Request, res: Response) {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Returning mocked provisioning status');
+    }
+
     // In a real implementation, we'd use the ID from the request
     // For demo purposes, we're getting the latest state
     const latestState = await storage.getLatestProvisioningState();
@@ -121,7 +144,7 @@ export async function getInfraProvisioningStatus(req: Request, res: Response) {
       status: getStepStatus(step.id, latestState)
     }));
     
-    return res.status(200).json({
+    const response = {
       success: true,
       infrastructureType: latestState.infrastructureType,
       status,
@@ -134,8 +157,14 @@ export async function getInfraProvisioningStatus(req: Request, res: Response) {
         instanceType: latestState.instanceType,
         containerCount: latestState.containerCount,
         autoScaling: latestState.autoScaling
-      }
-    });
+      },
+      dummyMode // Include dummy mode flag in response
+    };
+    
+    return res.status(200).json(dummyMode
+      ? generateMockResponse(response) // Wrap in mock response format if in dummy mode
+      : response
+    );
     
   } catch (error) {
     console.error('Error getting provisioning status:', error);

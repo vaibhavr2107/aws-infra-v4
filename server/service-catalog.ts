@@ -1,5 +1,6 @@
 import { IStorage } from "./storage";
 import { ProvisioningState, ProvisioningConfig } from "@shared/schema";
+import { isDummyMode } from "./utils/config";
 
 // Mock AWS credentials interface for our internal implementation
 interface AwsCredentials {
@@ -50,6 +51,16 @@ export async function provisionEcsInfrastructure(
   storage: IStorage
 ): Promise<void> {
   try {
+    // Check if dummy mode is enabled
+    const dummyMode = isDummyMode();
+    if (dummyMode) {
+      console.log('AWS_DUMMY mode enabled: Using accelerated provisioning flow');
+      await storage.addProvisioningLog(
+        provisioningId, 
+        'AWS_DUMMY mode enabled: Using accelerated provisioning flow'
+      );
+    }
+
     // In a real implementation, this would use AWS SDK to provision resources
     // For demo purposes, we'll simulate the process with timeouts
     
@@ -102,12 +113,16 @@ export async function provisionEcsInfrastructure(
       );
       
       // Simulate step processing time
-      await new Promise(resolve => setTimeout(resolve, step.duration));
+      // In dummy mode, significantly reduce the delay
+      const stepDuration = dummyMode ? Math.min(300, step.duration / 5) : step.duration;
+      await new Promise(resolve => setTimeout(resolve, stepDuration));
       
       // Add log for completed step
       await storage.addProvisioningLog(
         provisioningId, 
-        `Completed: ${step.name}`
+        dummyMode
+          ? `Completed: ${step.name} (AWS_DUMMY mode: mock operation)`
+          : `Completed: ${step.name}`
       );
     }
     
@@ -120,7 +135,9 @@ export async function provisionEcsInfrastructure(
     // Add final log
     await storage.addProvisioningLog(
       provisioningId, 
-      "Provisioning completed successfully!"
+      dummyMode
+        ? "Provisioning completed successfully! (AWS_DUMMY mode: All operations mocked)"
+        : "Provisioning completed successfully!"
     );
     
   } catch (error) {
