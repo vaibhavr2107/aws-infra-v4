@@ -131,8 +131,10 @@ export default function InfraConfigurationForm({
       windowsGroup: values.windowsGroup,
     });
 
-    // Submit the form
-    onSubmit(new Event("submit") as unknown as React.FormEvent);
+    // Submit the form - Added check for onSubmit to prevent errors if not provided.
+    if (onSubmit) {
+      onSubmit(new Event("submit") as unknown as React.FormEvent);
+    }
   }
 
   return (

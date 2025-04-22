@@ -11,7 +11,6 @@ const AppRouter: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       {location === '/dashboard/ecs' && <EcsDashboard />}
       {location === '/dashboard/infra' && <InfraDashboard />}
       {location === '/' && <Landing />}
