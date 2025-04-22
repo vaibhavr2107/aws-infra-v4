@@ -139,6 +139,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
           <StepTracker 
             steps={provisioningState.steps} 
             currentStep={provisioningState.currentStep}
+            status={provisioningState.status}
           />
           
           <ActivityMonitor 

@@ -139,6 +139,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
           <StepTracker 
             steps={provisioningState.steps} 
             currentStep={provisioningState.currentStep}
+            status={provisioningState.status}
           />
           
           <ActivityMonitor 

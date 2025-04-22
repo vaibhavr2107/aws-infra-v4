@@ -12,15 +12,17 @@ interface Step {
 interface StepTrackerProps {
   steps: Step[];
   currentStep: string | null;
+  status?: 'pending' | 'in-progress' | 'completed' | 'failed';
 }
 
-const StepTracker: React.FC<StepTrackerProps> = ({ steps, currentStep }) => {
+const StepTracker: React.FC<StepTrackerProps> = ({ steps, currentStep, status = 'pending' }) => {
   if (!steps || steps.length === 0) {
     return <div>No steps defined.</div>;
   }
   
   // Find the index of the current step
   const currentStepIndex = currentStep ? steps.findIndex(step => step.id === currentStep) : -1;
+  const isCompleted = status === 'completed';
   
   return (
     <div className="border rounded-lg p-4 bg-white">
@@ -28,13 +30,13 @@ const StepTracker: React.FC<StepTrackerProps> = ({ steps, currentStep }) => {
       <div className="space-y-4">
         {steps.map((step, index) => {
           // Step status
-          const isCompleted = currentStepIndex > index;
-          const isCurrent = currentStep === step.id;
-          const isPending = !isCompleted && !isCurrent;
+          const stepCompleted = isCompleted || currentStepIndex > index || (isCompleted && currentStep === step.id);
+          const isCurrent = !isCompleted && currentStep === step.id;
+          const isPending = !stepCompleted && !isCurrent;
           
           // Determine icon
           let icon;
-          if (isCompleted) {
+          if (stepCompleted) {
             icon = <CheckCircle2 className="h-5 w-5 text-green-500" />;
           } else if (isCurrent) {
             icon = <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full" />;
