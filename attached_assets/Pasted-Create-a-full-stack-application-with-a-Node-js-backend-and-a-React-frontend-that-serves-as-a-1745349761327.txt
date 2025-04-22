@@ -1,0 +1,60 @@
+Create a full-stack application with a **Node.js backend** and a **React frontend** that serves as a dashboard for provisioning AWS infrastructure using **AWS SDK for JavaScript (v3)**.
+>
+> ### **High-Level Goal:**
+> This dashboard will allow users to provision AWS infrastructure (e.g., ECS or EKS clusters) by selecting and triggering **Service Catalog product provisioning**. The app will interact with internal APIs to fetch temporary AWS credentials (accessKeyId, secretAccessKey, sessionToken) based on user input (username & password), and then use those credentials with the AWS SDK to perform AWS actions.
+>
+> ---
+>
+> ### **Features:**
+>
+> #### **Landing Page**
+> - Ask the user: “What type of infra do you want to build?”
+> - Options: `ECS`, `EKS`
+> - On selection, navigate to respective route (e.g., `/dashboard/ecs`)
+>
+> #### **ECS Dashboard View (`/dashboard/ecs`)**
+> - Split layout into **3 sections**:
+>
+> ##### **Top Section (Split in 2)**
+> 1. **Left:** A **form** with fields like:
+>    - AWS Username
+>    - Password
+>    - Application Name
+>    - Other custom inputs required to trigger provisioning
+> 2. **Right:** `ECSStepsComponent`
+>    - Displays a **visual checklist or pipeline** view of the ECS provisioning steps
+>    - Each step corresponds to a Service Catalog product or internal setup process
+>    - Each item is a **box or circle UI element** that shows:
+>      - Step Name
+>      - Icon
+>      - Status (Pending, In Progress, Completed)
+>    - As provisioning completes, boxes get visually updated (ticked/colored)
+>
+> ##### **Bottom Section**
+> - **Flow/Activity Monitor View**:
+>   - Live logs or status updates:
+>     - Current running step
+>     - Command/output logs
+>     - What's pending
+>     - What's completed
+>   - Useful for debugging and transparency
+>
+> ---
+>
+> ### **Backend Details:**
+> - Use Express.js for APIs
+> - One API to fetch AWS credentials (call internal company endpoint)
+> - Use **`@aws-sdk/client-service-catalog`** and other AWS SDK modules as needed
+> - API to **provision products** dynamically using fetched credentials
+> - Should support async provisioning tracking and return progress status
+>
+> ---
+>
+> ### **Optional Extras:**
+> - Add session-based state for tracking user provisioning status
+> - Allow restarting or cleaning up failed steps
+> - Add support for EKS later via similar flow as ECS
+>
+> ---
+>
+> The UI should be clean, responsive, and modular. Focus on clarity of the provisioning steps and a smooth user experience.
