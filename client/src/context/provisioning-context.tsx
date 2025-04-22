@@ -11,6 +11,11 @@ import {
   startProvisioning, 
   ecsSteps 
 } from '@/lib/aws-service-utils';
+import {
+  getInfraProvisioningStatus,
+  startInfraProvisioning,
+  infraSteps
+} from '@/lib/infra-service-utils';
 
 interface ProvisioningContextType {
   provisioningState: ProvisioningState;
@@ -21,8 +26,8 @@ interface ProvisioningContextType {
   updateEcsConfig: (config: Partial<EcsConfig>) => void;
   startProvisioningProcess: () => Promise<void>;
   resetProvisioning: () => void;
-  currentPage: 'landing' | 'ecs' | 'eks';
-  navigateTo: (page: 'landing' | 'ecs' | 'eks') => void;
+  currentPage: 'landing' | 'ecs' | 'eks' | 'infra';
+  navigateTo: (page: 'landing' | 'ecs' | 'eks' | 'infra') => void;
 }
 
 const defaultProvisioningState: ProvisioningState = {
@@ -50,7 +55,7 @@ const ProvisioningContext = createContext<ProvisioningContextType | undefined>(u
 
 export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState<'landing' | 'ecs' | 'eks'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'ecs' | 'eks' | 'infra'>('landing');
   const [awsCredentials, setAwsCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
   const [ecsConfig, setEcsConfig] = useState<EcsConfig>(defaultEcsConfig);
   const [provisioningState, setProvisioningState] = useState<ProvisioningState>(defaultProvisioningState);
@@ -105,15 +110,33 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   // Start provisioning process
   const startProvisioningProcess = async () => {
     try {
-      await startProvisioning(awsCredentials, ecsConfig);
-      
-      // Update local state
-      setProvisioningState(prev => ({
-        ...prev,
-        status: 'in-progress',
-        currentStep: 'authentication',
-        config: ecsConfig,
-      }));
+      if (currentPage === 'infra') {
+        // Start infra provisioning
+        await startInfraProvisioning(awsCredentials, ecsConfig);
+        
+        // Update local state with infra steps
+        setProvisioningState(prev => ({
+          ...prev,
+          infrastructureType: 'infra',
+          status: 'in-progress',
+          currentStep: 'setup-auth',
+          steps: infraSteps,
+          config: ecsConfig,
+        }));
+      } else {
+        // Start ECS provisioning
+        await startProvisioning(awsCredentials, ecsConfig);
+        
+        // Update local state with ECS steps
+        setProvisioningState(prev => ({
+          ...prev,
+          infrastructureType: 'ecs',
+          status: 'in-progress',
+          currentStep: 'authentication',
+          steps: ecsSteps,
+          config: ecsConfig,
+        }));
+      }
       
       // Start polling for updates
       await refetch();
@@ -135,12 +158,32 @@ export const ProvisioningProvider = ({ children }: { children: ReactNode }) => {
   
   // Reset provisioning state
   const resetProvisioning = () => {
-    setProvisioningState(defaultProvisioningState);
+    const steps = currentPage === 'infra' ? infraSteps : ecsSteps;
+    setProvisioningState({
+      ...defaultProvisioningState,
+      infrastructureType: currentPage === 'infra' ? 'infra' : 'ecs',
+      steps,
+    });
   };
   
   // Navigate to a different page
-  const navigateTo = (page: 'landing' | 'ecs' | 'eks') => {
+  const navigateTo = (page: 'landing' | 'ecs' | 'eks' | 'infra') => {
     setCurrentPage(page);
+    
+    // Update steps based on the selected page
+    if (page === 'infra') {
+      setProvisioningState(prev => ({
+        ...prev,
+        infrastructureType: 'infra',
+        steps: infraSteps,
+      }));
+    } else if (page === 'ecs') {
+      setProvisioningState(prev => ({
+        ...prev,
+        infrastructureType: 'ecs',
+        steps: ecsSteps,
+      }));
+    }
     
     // If we're going to a provisioning page, try to get the latest state
     if (page !== 'landing') {
