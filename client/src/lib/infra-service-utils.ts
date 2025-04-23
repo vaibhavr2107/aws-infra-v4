@@ -3,9 +3,9 @@ import {
   EcsConfig, 
   ProvisioningState, 
   ProvisioningLog, 
-  ProvisioningStep as Step 
+  ProvisioningStep as Step,
+  InfraConfig
 } from './types';
-import { InfraConfig } from './types/infra-config';
 import { formatLog } from './aws-service-utils';
 import { apiRequest } from './queryClient';
 
@@ -106,7 +106,7 @@ export async function startInfraProvisioning(
     throw new Error('Infrastructure configuration is required');
   }
 
-  const response = await apiRequest<{ success: boolean, message: string }>('/api/infra/start', {
+  const response = await apiRequest<{ success: boolean, message: string }>('/api/infra/provision', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

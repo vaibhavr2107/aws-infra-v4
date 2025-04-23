@@ -4,9 +4,9 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   AwsCredentialsRequest, 
   EcsConfig, 
-  ProvisioningState 
+  ProvisioningState,
+  InfraConfig 
 } from '@/lib/types';
-import { InfraConfig } from '@/lib/types/infra-config';
 import { 
   getProvisioningStatus, 
   startProvisioning, 
@@ -243,7 +243,8 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
   );
 };
 
-export function useProvisioning() {
+// Export the context hook
+export const useProvisioning = () => {
   const context = useContext(ProvisioningContext);
   
   if (context === undefined) {
@@ -251,4 +252,4 @@ export function useProvisioning() {
   }
   
   return context;
-};
+}
