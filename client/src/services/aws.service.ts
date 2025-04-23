@@ -1,7 +1,8 @@
 import { apiRequest } from "@/lib/queryClient";
 import { 
   AwsCredentialsRequest,
-  EcsConfig 
+  EcsConfig,
+  InfraConfig
 } from "@/lib/types";
 
 /**
@@ -73,6 +74,54 @@ export async function getEcsSteps() {
 }
 
 /**
+ * Start Infrastructure provisioning
+ * @param credentials AWS username and password
+ * @param config Infrastructure configuration
+ * @returns Response from provisioning API
+ */
+export async function startInfraProvisioning(
+  credentials: AwsCredentialsRequest,
+  config: InfraConfig
+) {
+  return await apiRequest('/api/infra/provision', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      credentials,
+      config
+    })
+  });
+}
+
+/**
+ * Get Infrastructure provisioning status
+ * @returns Current provisioning status
+ */
+export async function getInfraProvisioningStatus() {
+  return await apiRequest('/api/infra/status', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+/**
+ * Get Infrastructure steps
+ * @returns List of Infrastructure provisioning steps
+ */
+export async function getInfraSteps() {
+  return await apiRequest('/api/infra/steps', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+/**
  * Validate AWS credentials
  */
 export function validateAwsCredentials(credentials: AwsCredentialsRequest): string | null {
@@ -105,6 +154,27 @@ export function validateEcsConfig(config: EcsConfig): string | null {
   
   if (config.containerCount < 1 || config.containerCount > 10) {
     return "Container count must be between 1 and 10";
+  }
+  
+  return null;
+}
+
+/**
+ * Validate Infrastructure configuration
+ */
+export function validateInfraConfig(config: InfraConfig): string | null {
+  if (!config.friendlyStackName || config.friendlyStackName.length < 3) {
+    return "Stack name must be at least 3 characters";
+  }
+  
+  if (!config.environment) {
+    return "Environment must be selected";
+  }
+  
+  // Validate infrastructure components are selected
+  if (!config.provisionCoreVpc && !config.provisionEcsSpoke && 
+      !config.provisionEc2Spoke && !config.provisionBorderControlSpoke) {
+    return "At least one infrastructure component must be selected";
   }
   
   return null;

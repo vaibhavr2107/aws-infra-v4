@@ -44,6 +44,28 @@ export interface EcsConfig {
 }
 
 /**
+ * Infrastructure configuration
+ */
+export interface InfraConfig {
+  // Infrastructure specific fields
+  friendlyStackName: string;
+  environment: 'dev' | 'test' | 'prod';
+  ecsTaskRole: boolean;
+  provisionCoreVpc: boolean;
+  provisionEcsSpoke: boolean;
+  provisionEc2Spoke: boolean;
+  provisionBorderControlSpoke: boolean;
+  bcAdminAdGroup: string;
+  vpcProvisioningArtifactName: string;
+  bcProvisioningArtifactName: string;
+  bcAdminAdGroupDomain: string;
+  ec2SpokeProvisioningArtifactName: string;
+  ecsSpokeProvisioningArtifactName: string;
+  linuxGroup: string;
+  windowsGroup: string;
+}
+
+/**
  * AWS credentials request
  */
 export interface AwsCredentialsRequest {
