@@ -8,7 +8,7 @@ import {
 const router = Router();
 
 // Start infrastructure provisioning
-router.post('/start', startInfraProvisioning);
+router.post('/provision', startInfraProvisioning);
 
 // Get infrastructure provisioning status
 router.get('/status', getInfraProvisioningStatus);
