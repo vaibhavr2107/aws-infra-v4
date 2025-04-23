@@ -63,16 +63,18 @@ export async function startInfraProvisioning(req: Request, res: Response) {
           message: 'Initializing infrastructure provisioning...' 
         }];
         
+    // For infrastructure provisioning, we use the friendlyStackName as our identifier
+    // We set generic values for ECS-specific fields as they're only relevant for ECS provisioning
     const provisioningState = await storage.createProvisioningState({
       userId: 1,
       infrastructureType: 'infra',
       status: 'pending',
       currentStep: null,
-      applicationName: validatedConfig.applicationName,
+      applicationName: validatedConfig.friendlyStackName, // Use stack name for database storage
       environment: validatedConfig.environment,
-      instanceType: validatedConfig.instanceType,
-      containerCount: validatedConfig.containerCount,
-      autoScaling: validatedConfig.autoScaling,
+      instanceType: 't2.micro', // Default placeholder for infra
+      containerCount: 2, // Default placeholder for infra
+      autoScaling: false, // Default placeholder for infra
       logs: initialLogs,
       createdAt: now,
       updatedAt: now
@@ -145,6 +147,8 @@ export async function getInfraProvisioningStatus(req: Request, res: Response) {
       status: getStepStatus(step.id, latestState)
     }));
     
+    // For infrastructure provisioning, we build a specific config response with infra fields
+    // This is separate from ECS provisioning response format
     const response = {
       success: true,
       infrastructureType: latestState.infrastructureType,
@@ -153,11 +157,10 @@ export async function getInfraProvisioningStatus(req: Request, res: Response) {
       steps,
       logs: latestState.logs,
       config: {
-        applicationName: latestState.applicationName,
-        environment: latestState.environment,
-        instanceType: latestState.instanceType,
-        containerCount: latestState.containerCount,
-        autoScaling: latestState.autoScaling
+        // Use applicationName from storage as friendlyStackName for infra
+        friendlyStackName: latestState.applicationName,
+        environment: latestState.environment
+        // We don't include ECS-specific fields like instanceType, containerCount, etc.
       },
       dummyMode // Include dummy mode flag in response
     };

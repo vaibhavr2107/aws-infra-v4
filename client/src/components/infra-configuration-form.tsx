@@ -27,18 +27,6 @@ import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const infraFormSchema = z.object({
-  // Common fields with ECS configuration
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters",
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
-  }),
-  instanceType: z.string().min(1, {
-    message: "Instance type is required",
-  }).default('t2.micro'),
-  containerCount: z.number().int().min(1).max(10).default(2),
-  autoScaling: z.boolean().default(false),
-  
   // Infrastructure specific fields
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters",
@@ -96,20 +84,14 @@ export default function InfraConfigurationForm({
   const { toast } = useToast();
 
   const defaultValues: InfraFormValues = {
-    // Common fields with ECS configuration
-    applicationName: infraConfig?.applicationName || "aws-infra-app",
-    instanceType: infraConfig?.instanceType || "t2.micro",
-    containerCount: infraConfig?.containerCount || 2,
-    autoScaling: infraConfig?.autoScaling || false,
-    
     // Infrastructure specific fields
     friendlyStackName: infraConfig?.friendlyStackName || "aws-infrastructure",
     environment: (infraConfig?.environment || ecsConfig.environment) as "dev" | "test" | "prod",
-    ecsTaskRole: true,
-    provisionCoreVpc: true,
-    provisionEcsSpoke: true,
-    provisionEc2Spoke: true,
-    provisionBorderControlSpoke: true,
+    ecsTaskRole: infraConfig?.ecsTaskRole !== undefined ? infraConfig.ecsTaskRole : true,
+    provisionCoreVpc: infraConfig?.provisionCoreVpc !== undefined ? infraConfig.provisionCoreVpc : true,
+    provisionEcsSpoke: infraConfig?.provisionEcsSpoke !== undefined ? infraConfig.provisionEcsSpoke : true,
+    provisionEc2Spoke: infraConfig?.provisionEc2Spoke !== undefined ? infraConfig.provisionEc2Spoke : true,
+    provisionBorderControlSpoke: infraConfig?.provisionBorderControlSpoke !== undefined ? infraConfig.provisionBorderControlSpoke : true,
     bcAdminAdGroup: infraConfig?.bcAdminAdGroup || "AWS-SC-Admin-Group",
     vpcProvisioningArtifactName: infraConfig?.vpcProvisioningArtifactName || "v1.0",
     bcProvisioningArtifactName: infraConfig?.bcProvisioningArtifactName || "v1.0",
@@ -169,27 +151,6 @@ export default function InfraConfigurationForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="applicationName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Application Name</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your application name"
-                    disabled={disabled}
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Name for your application infrastructure
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
             name="friendlyStackName"
             render={({ field }) => (
               <FormItem>
@@ -238,92 +199,10 @@ export default function InfraConfigurationForm({
               </FormItem>
             )}
           />
-          
-          <FormField
-            control={form.control}
-            name="instanceType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Instance Type</FormLabel>
-                <Select
-                  disabled={disabled}
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select instance type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="t2.micro">t2.micro</SelectItem>
-                    <SelectItem value="t2.small">t2.small</SelectItem>
-                    <SelectItem value="t2.medium">t2.medium</SelectItem>
-                    <SelectItem value="t2.large">t2.large</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  AWS EC2 instance size
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Container Configuration</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="containerCount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Container Count</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={10}
-                      placeholder="2"
-                      disabled={disabled}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Number of containers to deploy (1-10)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="autoScaling"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled={disabled}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Enable Auto Scaling</FormLabel>
-                    <FormDescription>
-                      Automatically scale containers based on load
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-        
-          <h3 className="text-lg font-medium mt-6">Infrastructure Components</h3>
+          <h3 className="text-lg font-medium">Infrastructure Components</h3>
 
           <FormField
             control={form.control}

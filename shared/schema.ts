@@ -87,18 +87,6 @@ export const ecsConfigSchema = z.object({
 
 // Infrastructure Configuration Schema
 export const infraConfigSchema = z.object({
-  // Common fields that match the provisioning state table
-  applicationName: z.string().min(3, {
-    message: "Application name must be at least 3 characters"
-  }).refine(value => /^[a-zA-Z0-9-]+$/.test(value), {
-    message: "Application name can only contain letters, numbers, and hyphens"
-  }),
-  instanceType: z.string().min(1, {
-    message: "Instance type is required"
-  }).default('t2.micro'),
-  containerCount: z.number().int().min(1).max(10).default(2),
-  autoScaling: z.boolean().default(false),
-  
   // Infrastructure specific fields
   friendlyStackName: z.string().min(3, {
     message: "Stack name must be at least 3 characters"
