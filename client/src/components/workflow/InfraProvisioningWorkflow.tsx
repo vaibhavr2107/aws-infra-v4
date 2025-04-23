@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProvisioning } from '@/context/provisioning-context';
 import { useToast } from '@/hooks/use-toast';
@@ -17,8 +18,7 @@ interface InfraProvisioningWorkflowProps {
 const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ onBack }) => {
   const { 
     provisioningState, 
-    awsCredentials,
-    ecsConfig,
+    infraCredentials,
     infraConfig,
     startProvisioningProcess
   } = useProvisioning();
@@ -27,8 +27,7 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
   const [activeStep, setActiveStep] = useState<'credentials' | 'configuration' | 'provisioning'>('credentials');
 
   const handleCredentialsNext = () => {
-    // Validate AWS credentials
-    if (!awsCredentials.username || !awsCredentials.password) {
+    if (!infraCredentials.username || !infraCredentials.password) {
       toast({
         title: "Validation Error",
         description: "Please enter both username and password",
@@ -36,22 +35,13 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       });
       return;
     }
-
     setActiveStep('configuration');
   };
 
   const handleProvisioningStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleProvisioningStart triggered');
-    if (!awsCredentials || !infraConfig) {
-      console.error('Missing credentials or config');
-      return;
-    }
-    console.log('Current AWS credentials:', awsCredentials);
-    console.log('Current infra config:', infraConfig);
-
-    // Validate infrastructure config
-    if (!infraConfig || !awsCredentials) {
+    
+    if (!infraCredentials || !infraConfig) {
       toast({
         title: "Validation Error",
         description: "Infrastructure configuration and AWS credentials are required",
@@ -70,20 +60,15 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
       return;
     }
 
-    // Start provisioning process
     try {
-      console.log('Starting infrastructure provisioning with config:', infraConfig);
-      await startProvisioningProcess(awsCredentials, infraConfig);
-      console.log('Infrastructure provisioning started successfully');
+      await startProvisioningProcess();
       setActiveStep('provisioning');
     } catch (error: any) {
-      console.error('Infrastructure provisioning error:', error);
       toast({
         title: "Provisioning Error",
         description: error.message || "Failed to start infrastructure provisioning",
         variant: "destructive"
       });
-      return;
     }
   };
 
@@ -133,8 +118,8 @@ const InfraProvisioningWorkflow: React.FC<InfraProvisioningWorkflowProps> = ({ o
               </CardHeader>
               <CardContent>
                 <div className="text-sm mb-4">
-                  <p className="font-medium">Stack Name: <span className="font-normal">{infraConfig?.friendlyStackName || ecsConfig.applicationName}</span></p>
-                  <p className="font-medium">Environment: <span className="font-normal capitalize">{infraConfig?.environment || ecsConfig.environment}</span></p>
+                  <p className="font-medium">Stack Name: <span className="font-normal">{infraConfig?.friendlyStackName}</span></p>
+                  <p className="font-medium">Environment: <span className="font-normal capitalize">{infraConfig?.environment}</span></p>
                   <p className="font-medium">Core VPC: <span className="font-normal">{infraConfig?.provisionCoreVpc ? 'Yes' : 'No'}</span></p>
                   <p className="font-medium">ECS Spoke: <span className="font-normal">{infraConfig?.provisionEcsSpoke ? 'Yes' : 'No'}</span></p>
                   <p className="font-medium">EC2 Spoke: <span className="font-normal">{infraConfig?.provisionEc2Spoke ? 'Yes' : 'No'}</span></p>

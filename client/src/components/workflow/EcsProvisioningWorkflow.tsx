@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProvisioning } from '@/context/provisioning-context';
 import { useToast } from '@/hooks/use-toast';
@@ -5,7 +6,7 @@ import AwsCredentialForm from '@/components/aws-credential-form';
 import EcsConfigurationForm from '@/components/ecs-configuration-form';
 import StepTracker from '@/components/ui/step-tracker';
 import ActivityMonitor from '@/components/ui/activity-monitor';
-import { validateAwsCredentials, validateEcsConfig } from '@/lib/aws-service-utils';
+import { validateAwsCredentials } from '@/lib/aws-service-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,17 +18,17 @@ interface EcsProvisioningWorkflowProps {
 const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBack }) => {
   const { 
     provisioningState, 
-    awsCredentials,
+    ecsCredentials,
     ecsConfig,
     startProvisioningProcess
   } = useProvisioning();
-  
+
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState<'credentials' | 'configuration' | 'provisioning'>('credentials');
-  
+
   const handleCredentialsNext = () => {
     // Validate AWS credentials
-    const credentialsError = validateAwsCredentials(awsCredentials);
+    const credentialsError = validateAwsCredentials(ecsCredentials);
     if (credentialsError) {
       toast({
         title: "Validation Error",
@@ -36,41 +37,28 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
       });
       return;
     }
-    
     setActiveStep('configuration');
   };
-  
+
   const handleProvisioningStart = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate ECS config
-    const configError = validateEcsConfig(ecsConfig);
-    if (configError) {
-      toast({
-        title: "Validation Error",
-        description: configError,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Start provisioning process
     try {
       await startProvisioningProcess();
       setActiveStep('provisioning');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Provisioning Error",
-        description: "Failed to start the provisioning process. Please try again.",
+        description: error.message || "Failed to start ECS provisioning",
         variant: "destructive"
       });
     }
   };
-  
+
   const handleConfigurationBack = () => {
     setActiveStep('credentials');
   };
-  
+
   return (
     <div className="max-w-7xl mx-auto pb-6">
       <div className="mb-6 flex items-center">
@@ -84,7 +72,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">ECS Infrastructure Provisioning</h1>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Left Side - Forms */}
         <div>
@@ -94,7 +82,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-          
+
           {activeStep === 'configuration' && (
             <EcsConfigurationForm 
               onSubmit={handleProvisioningStart}
@@ -102,7 +90,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
               disabled={provisioningState.status === 'in-progress'}
             />
           )}
-          
+
           {activeStep === 'provisioning' && (
             <Card>
               <CardHeader>
@@ -119,7 +107,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
                   <p className="font-medium">Containers: <span className="font-normal">{ecsConfig.containerCount}</span></p>
                   <p className="font-medium">Auto Scaling: <span className="font-normal">{ecsConfig.autoScaling ? 'Enabled' : 'Disabled'}</span></p>
                 </div>
-                
+
                 {(provisioningState.status === 'failed' || provisioningState.status === 'completed') && (
                   <Button 
                     onClick={() => setActiveStep('configuration')}
@@ -133,7 +121,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
             </Card>
           )}
         </div>
-        
+
         {/* Right Side - Status and Logs */}
         <div className="space-y-6">
           <StepTracker 
@@ -141,7 +129,7 @@ const EcsProvisioningWorkflow: React.FC<EcsProvisioningWorkflowProps> = ({ onBac
             currentStep={provisioningState.currentStep}
             status={provisioningState.status}
           />
-          
+
           <ActivityMonitor 
             logs={provisioningState.logs}
             status={provisioningState.status}
