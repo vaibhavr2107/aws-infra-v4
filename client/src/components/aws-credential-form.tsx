@@ -15,7 +15,17 @@ const AwsCredentialForm: React.FC<AwsCredentialFormProps> = ({
   disabled = false,
   onNext
 }) => {
-  const { awsCredentials, updateAwsCredentials } = useProvisioning();
+  const { 
+    currentPage, 
+    ecsCredentials, 
+    infraCredentials, 
+    updateEcsCredentials, 
+    updateInfraCredentials 
+  } = useProvisioning();
+
+  // Select the appropriate credentials and update function based on the current page
+  const credentials = currentPage === 'infra' ? infraCredentials : ecsCredentials;
+  const updateCredentials = currentPage === 'infra' ? updateInfraCredentials : updateEcsCredentials;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +50,8 @@ const AwsCredentialForm: React.FC<AwsCredentialFormProps> = ({
             <Input
               id="username"
               placeholder="Enter your IAM username"
-              value={awsCredentials.username}
-              onChange={(e) => updateAwsCredentials({ username: e.target.value })}
+              value={credentials.username}
+              onChange={(e) => updateCredentials({ username: e.target.value })}
               disabled={disabled}
               required
             />
@@ -52,8 +62,8 @@ const AwsCredentialForm: React.FC<AwsCredentialFormProps> = ({
               id="password"
               type="password"
               placeholder="Enter your IAM password"
-              value={awsCredentials.password}
-              onChange={(e) => updateAwsCredentials({ password: e.target.value })}
+              value={credentials.password}
+              onChange={(e) => updateCredentials({ password: e.target.value })}
               disabled={disabled}
               required
             />
@@ -62,7 +72,7 @@ const AwsCredentialForm: React.FC<AwsCredentialFormProps> = ({
           <Button 
             type="submit"
             className="w-full bg-aws-blue hover:bg-aws-blue/90"
-            disabled={disabled || !awsCredentials.username || !awsCredentials.password}
+            disabled={disabled || !credentials.username || !credentials.password}
           >
             Next
           </Button>

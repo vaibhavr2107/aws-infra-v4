@@ -21,14 +21,26 @@ import {
 interface ProvisioningContextType {
   provisioningState: ProvisioningState;
   isLoading: boolean;
-  awsCredentials: AwsCredentialsRequest;
+  
+  // Separate credentials for each workflow
+  ecsCredentials: AwsCredentialsRequest;
+  infraCredentials: AwsCredentialsRequest;
+  
+  // Configurations
   ecsConfig: EcsConfig;
   infraConfig?: InfraConfig;
-  updateAwsCredentials: (credentials: Partial<AwsCredentialsRequest>) => void;
+  
+  // Updater functions
+  updateEcsCredentials: (credentials: Partial<AwsCredentialsRequest>) => void;
+  updateInfraCredentials: (credentials: Partial<AwsCredentialsRequest>) => void;
   updateEcsConfig: (config: Partial<EcsConfig>) => void;
   updateInfraConfig: (config: Partial<InfraConfig>) => void;
+  
+  // Process functions  
   startProvisioningProcess: () => Promise<void>;
   resetProvisioning: () => void;
+  
+  // Navigation
   currentPage: 'landing' | 'ecs' | 'eks' | 'infra';
   navigateTo: (page: 'landing' | 'ecs' | 'eks' | 'infra') => void;
 }
@@ -77,9 +89,15 @@ const ProvisioningContext = createContext<ProvisioningContextType | undefined>(u
 export function ProvisioningProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState<'landing' | 'ecs' | 'eks' | 'infra'>('landing');
-  const [awsCredentials, setAwsCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
+  // Separate credentials for each workflow type
+  const [ecsCredentials, setEcsCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
+  const [infraCredentials, setInfraCredentials] = useState<AwsCredentialsRequest>(defaultAwsCredentials);
+  
+  // Config for each workflow
   const [ecsConfig, setEcsConfig] = useState<EcsConfig>(defaultEcsConfig);
   const [infraConfig, setInfraConfig] = useState<InfraConfig>(defaultInfraConfig);
+  
+  // Provisioning state
   const [provisioningState, setProvisioningState] = useState<ProvisioningState>(defaultProvisioningState);
   
   // Separate queries for each infrastructure type
@@ -131,9 +149,17 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
     };
   }, [provisioningState.status, refetch]);
   
-  // Update AWS credentials
-  const updateAwsCredentials = (credentials: Partial<AwsCredentialsRequest>) => {
-    setAwsCredentials(prev => ({
+  // Update ECS credentials
+  const updateEcsCredentials = (credentials: Partial<AwsCredentialsRequest>) => {
+    setEcsCredentials(prev => ({
+      ...prev,
+      ...credentials,
+    }));
+  };
+  
+  // Update Infrastructure credentials
+  const updateInfraCredentials = (credentials: Partial<AwsCredentialsRequest>) => {
+    setInfraCredentials(prev => ({
       ...prev,
       ...credentials,
     }));
@@ -160,7 +186,7 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
     try {
       if (currentPage === 'infra') {
         // Start infra provisioning with detailed config
-        await startInfraProvisioning(awsCredentials, infraConfig);
+        await startInfraProvisioning(infraCredentials, infraConfig);
         
         // Update local state with infra steps
         setProvisioningState(prev => ({
@@ -173,7 +199,7 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
         }));
       } else {
         // Start ECS provisioning
-        await startProvisioning(awsCredentials, ecsConfig);
+        await startProvisioning(ecsCredentials, ecsConfig);
         
         // Update local state with ECS steps
         setProvisioningState(prev => ({
@@ -244,10 +270,12 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
       value={{
         provisioningState,
         isLoading,
-        awsCredentials,
+        ecsCredentials,
+        infraCredentials,
         ecsConfig,
         infraConfig,
-        updateAwsCredentials,
+        updateEcsCredentials,
+        updateInfraCredentials,
         updateEcsConfig,
         updateInfraConfig,
         startProvisioningProcess,
