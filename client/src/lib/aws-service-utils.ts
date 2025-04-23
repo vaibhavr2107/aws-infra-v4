@@ -33,7 +33,8 @@ export async function startProvisioning(
     },
     body: JSON.stringify({
       credentials,
-      config
+      config,
+      infrastructureType: 'ecs'
     }),
   });
 }

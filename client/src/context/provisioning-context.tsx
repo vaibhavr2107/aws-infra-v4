@@ -55,7 +55,7 @@ const defaultEcsConfig: EcsConfig = {
 };
 
 const defaultInfraConfig: InfraConfig = {
-  friendlyStackName: '',
+  friendlyStackName: 'my-infra-stack',
   environment: 'dev',
   ecsTaskRole: true,
   provisionCoreVpc: true,
@@ -82,9 +82,12 @@ export function ProvisioningProvider({ children }: { children: ReactNode }) {
   const [infraConfig, setInfraConfig] = useState<InfraConfig>(defaultInfraConfig);
   const [provisioningState, setProvisioningState] = useState<ProvisioningState>(defaultProvisioningState);
   
+  // Determine the correct API endpoint based on current page
+  const statusEndpoint = currentPage === 'infra' ? '/api/infra/status' : '/api/ecs/status';
+  
   // Query for provisioning status
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['/api/ecs/status'],
+    queryKey: [statusEndpoint],
     enabled: false, // Don't fetch on mount
   });
   
