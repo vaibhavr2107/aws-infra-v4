@@ -34,7 +34,7 @@ export async function startEcsProvisioning(
   credentials: AwsCredentialsRequest,
   config: EcsConfig
 ) {
-  return await apiRequest('/api/provision/start', {
+  return await apiRequest('/api/ecs/provision', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -42,7 +42,7 @@ export async function startEcsProvisioning(
     body: JSON.stringify({
       credentials,
       config,
-      type: 'ecs'
+      infrastructureType: 'ecs'
     })
   });
 }
@@ -52,7 +52,7 @@ export async function startEcsProvisioning(
  * @returns Current provisioning status
  */
 export async function getEcsProvisioningStatus() {
-  return await apiRequest('/api/provision/status', {
+  return await apiRequest('/api/ecs/status', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'

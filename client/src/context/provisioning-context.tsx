@@ -47,7 +47,7 @@ const defaultAwsCredentials: AwsCredentialsRequest = {
 };
 
 const defaultEcsConfig: EcsConfig = {
-  applicationName: '',
+  applicationName: 'my-ecs-app',
   environment: 'dev',
   instanceType: 't2.micro',
   containerCount: 1,
